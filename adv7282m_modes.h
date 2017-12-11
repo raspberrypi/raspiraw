@@ -287,11 +287,12 @@ struct sensor_regs adv7282_pal[] =
 
    //if (input_type == ADV7182_INPUT_TYPE_DIFF_CVBS) {
    /* ADI required writes to make differential CVBS work */
-   adv7180_write(state, ADV7180_REG_RES_CIR, 0xa8),
-   adv7180_write(state, ADV7180_REG_CLAMP_ADJ, 0x90),
-   adv7180_write(state, ADV7180_REG_DIFF_MODE, 0xb0),
-   adv7180_write(state, ADV7180_REG_AGC_ADJ1, 0x08),
-   adv7180_write(state, ADV7180_REG_AGC_ADJ2, 0xa0),
+   //} else {
+   adv7180_write(state, ADV7180_REG_RES_CIR, 0xf0),
+   adv7180_write(state, ADV7180_REG_CLAMP_ADJ, 0xd0),
+   adv7180_write(state, ADV7180_REG_DIFF_MODE, 0x10),
+   adv7180_write(state, ADV7180_REG_AGC_ADJ1, 0x9c),
+   adv7180_write(state, ADV7180_REG_AGC_ADJ2, 0x00),
 
    //adv7180_set_power
    adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_ON),
@@ -312,8 +313,10 @@ struct sensor_regs adv7282_ntsc[] =
 };
 
 struct mode_def adv7282_modes[] = {
-   { adv7282_pal,  NUM_ELEMENTS(adv7282_pal),  720, 576, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1 },
-   { adv7282_ntsc, NUM_ELEMENTS(adv7282_ntsc), 720, 480, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1 },
+   { adv7282_pal,  NUM_ELEMENTS(adv7282_pal),  720, 578, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
+                     2, 6, 2, 6, 0, 1, 1 },
+   { adv7282_ntsc, NUM_ELEMENTS(adv7282_ntsc), 720, 480, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
+                     2, 6, 2, 6, 0, 1, 1 },
 };
 
 #undef addreg

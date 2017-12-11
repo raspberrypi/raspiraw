@@ -88,6 +88,13 @@ struct mode_def
 	uint8_t data_lanes;
 	unsigned int min_vts;
 	int line_time_ns;
+	uint32_t timing1;
+	uint32_t timing2;
+	uint32_t timing3;
+	uint32_t timing4;
+	uint32_t timing5;
+	uint32_t term1;
+	uint32_t term2;
 };
 
 struct sensor_def
@@ -718,6 +725,7 @@ int main(int argc, const char** argv) {
 	MMAL_CONNECTION_T *rawcam_isp = NULL;
 	MMAL_CONNECTION_T *isp_render = NULL;
 	MMAL_PARAMETER_CAMERA_RX_CONFIG_T rx_cfg = {{MMAL_PARAMETER_CAMERA_RX_CONFIG, sizeof(rx_cfg)}};
+	MMAL_PARAMETER_CAMERA_RX_TIMING_T rx_timing = {{MMAL_PARAMETER_CAMERA_RX_TIMING, sizeof(rx_timing)}};
 	int i;
 
 	bcm_host_init();
@@ -812,6 +820,36 @@ int main(int argc, const char** argv) {
 	if(status != MMAL_SUCCESS)
 	{
 		vcos_log_error("Failed to set cfg");
+		goto component_destroy;
+	}
+	status = mmal_port_parameter_get(output, &rx_timing.hdr);
+	if(status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to get timing");
+		goto component_destroy;
+	}
+	if (sensor_mode->timing1)
+		rx_timing.timing1 = sensor_mode->timing1;
+	if (sensor_mode->timing2)
+		rx_timing.timing2 = sensor_mode->timing2;
+	if (sensor_mode->timing3)
+		rx_timing.timing3 = sensor_mode->timing3;
+	if (sensor_mode->timing4)
+		rx_timing.timing4 = sensor_mode->timing4;
+	if (sensor_mode->timing5)
+		rx_timing.timing5 = sensor_mode->timing5;
+	if (sensor_mode->term1)
+		rx_timing.term1 = sensor_mode->term1;
+	if (sensor_mode->term2)
+		rx_timing.term2 = sensor_mode->term2;
+	vcos_log_error("Timing %u/%u, %u/%u/%u, %u/%u",
+		rx_timing.timing1, rx_timing.timing2,
+		rx_timing.timing3, rx_timing.timing4, rx_timing.timing5,
+		rx_timing.term1,  rx_timing.term2);
+	status = mmal_port_parameter_set(output, &rx_timing.hdr);
+	if(status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to set timing");
 		goto component_destroy;
 	}
 
