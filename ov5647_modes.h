@@ -874,7 +874,7 @@ struct sensor_def ov5647 = {
    .exposure_reg_num_bits = 20,
 
    .vts_reg =              0x380E,
-   .vts_reg_num_bits =     10,
+   .vts_reg_num_bits =     10,      // total vertical size [9:8] and [7:0] (ov5647 datasheet)
 
    .gain_reg =             0x350A,
    .gain_reg_num_bits =    10,

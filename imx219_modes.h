@@ -608,7 +608,7 @@ struct sensor_def imx219 = {
       .exposure_reg =         0x015A,
       .exposure_reg_num_bits = 16,
 
-      .vts_reg =              0x0160,
+      .vts_reg =              0x0162,  // VTS:  Line length (above)  or  total vertical size (ov5467)
       .vts_reg_num_bits =     16,
 
       .gain_reg =             0x0157,
