@@ -142,3 +142,5 @@ You can create high quality animated .gif from .ogg video with ffmpeg based [gif
 
 	gifenc.sh $1.ogg $1.anim.gif
 
+Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
+![360fps sample video](https://stamm-wilbrandt.de/en/forum/out.360fps.25xSlower.anim.gif)
