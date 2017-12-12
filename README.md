@@ -74,11 +74,31 @@ Instead of writing header to each frame file, it is written to frame 0 file only
 Since frame 0 will not be written normally it is a good place.
 For decoding ith frame with **dcraw** later, you need to concatenate frame 0 and frame i and store somewhere, then **dcraw** that file.
 
-	--timestps,	-ts	Write timestamps to output file -1
+	--tstamps,	-ts	Write timestamps to output file -1
 
 With this option timestamps for the captured frames get written to output file -1.
 This happens after video has been captured, so does not negatively affect capture frame rate.
-If this option is selected, a timestamp delta analysis is done and written to output, inclusive frame miss output.
+Format: "delta,index,timestamp\n"
+
+Timestamp distribution analysis can be easily done this way:
+
+	$ cat /dev/shm/out.-001.raw | cut -f1 -d, | sort -n | uniq -c
+	      1 
+	     65 1650
+	    531 1651
+	      4 1652
+	      2 3302
+	$ 
+
+This shows that majority of frame deltas are 1651us, and that two frame skips happened during recording.
+Frame skip indices can be easily determined by:
+
+	$ grep "^3" /dev/shm/out.-001.raw
+	3302,2,14461261624
+	3302,91,14461410205
+	$
+
+So we know that frames 0002-00090 have no frame skips.
 
 	--empty,	-emp	Write empty output files
 

@@ -193,11 +193,17 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandVts,		"-vts",		"v",  "Set current mode min_vts", -1},
 	{ CommandLine,		"-line",	"l",  "Set current mode line_time_ns", -1},
 	{ CommandWriteHeader0,	"-header0",	"hd0","Write the BRCM header to output file 0", 0 },
-	{ CommandWriteTimestamps,"-timestps",	"ts", "Write timestamps to output file -1", 0 },
+	{ CommandWriteTimestamps,"-tstamps",	"ts", "Write timestamps to output file -1", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
+
+typedef struct pts_node {
+	int	idx;
+	int64_t  pts;
+	struct pts_node *nxt;
+} *pts_node;
 
 typedef struct {
 	int mode;
@@ -225,6 +231,8 @@ typedef struct {
 	int write_header0;
 	int write_timestamps;
 	int write_empty;
+        pts_node ptsa;
+        pts_node ptso;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -418,6 +426,13 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 				file = fopen(filename, "wb");
 				if(file)
 				{
+					if (cfg->write_timestamps)
+					{
+						cfg->ptso->idx = count;
+						cfg->ptso->pts = buffer->pts;
+						cfg->ptso->nxt = malloc(sizeof(struct pts_node));
+						cfg->ptso = cfg->ptso->nxt;
+					}
 					if (!cfg->write_empty)
 					{
 						 if (cfg->write_header)
@@ -725,6 +740,8 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandWriteTimestamps:
 				cfg->write_timestamps = 1;
+				cfg->ptsa = malloc(sizeof(struct pts_node));
+				cfg->ptso = cfg->ptsa;
 				break;
 
 			case CommandWriteEmpty:
@@ -799,7 +816,8 @@ int main(int argc, const char** argv) {
 		.write_header0 = 0,
 		.write_timestamps = 0,
 		.write_empty = 0,
-
+		.ptsa = NULL,
+		.ptso = NULL,
 	};
 	uint32_t encoding;
 	const struct sensor_def *sensor;
@@ -1329,6 +1347,41 @@ component_destroy:
 		mmal_component_destroy(isp);
 	if (render)
 		mmal_component_destroy(render);
+
+	if (cfg.write_timestamps)
+	{
+		// Save timestamps to frame "-1"
+		FILE *file;
+		char *filename = NULL;
+		if (create_filenames(&filename, cfg.output, -1) == MMAL_SUCCESS)
+		{
+			file = fopen(filename, "wb");
+			if(file)
+			{
+				int64_t old;
+				for(pts_node aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
+				{
+					if (aux == cfg.ptsa)
+					{
+						fprintf(file, ",%d,%lld\n", aux->idx, aux->pts);
+					} else {
+						fprintf(file, "%lld,%d,%lld\n", aux->pts-old, aux->idx, aux->pts);
+					}
+					old = aux->pts;
+				}
+				fclose(file);
+			}
+			free(filename);
+		}
+
+		while (cfg.ptsa != cfg.ptso)
+		{
+			pts_node aux = cfg.ptsa->nxt;
+			free(cfg.ptsa);
+			cfg.ptsa = aux;
+		}
+		free(cfg.ptso);
+	}
 
 	return 0;
 }
