@@ -88,6 +88,7 @@ struct mode_def
 	uint8_t data_lanes;
 	unsigned int min_vts;
 	int line_time_ns;
+	uint16_t framerate;
 	uint32_t timing1;
 	uint32_t timing2;
 	uint32_t timing3;
@@ -154,6 +155,17 @@ enum {
 	CommandCameraNum,
 	CommandExposureus,
 	CommandI2cBus,
+	CommandRegs,
+	CommandHinc,
+	CommandVinc,
+	CommandFps,
+	CommandWidth,
+	CommandHeight,
+	CommandVts,
+	CommandLine,
+	CommandWriteHeader0,
+	CommandWriteTimestamps,
+	CommandWriteEmpty,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -172,6 +184,17 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandCameraNum, 	"-cameranum",	"c",  "Set camera number to use (0=CAM0, 1=CAM1).", 1 },
 	{ CommandExposureus, 	"-expus",	"eus",  "Set the sensor exposure time in micro seconds.", -1 },
 	{ CommandI2cBus, 	"-i2c",	        "y",  "Set the I2C bus to use.", -1 },
+	{ CommandRegs,	 	"-regs",	"r",  "Change (current mode) regs", 0 },
+	{ CommandHinc,		"-hinc",	"hi", "Set horizontal odd/even inc reg", -1},
+	{ CommandVinc,		"-vinc",	"vi", "Set vertical odd/even inc reg", -1},
+	{ CommandFps,		"-fps",		"f",  "Set framerate regs", -1},
+	{ CommandWidth,		"-width",	"w",  "Set current mode width", -1},
+	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
+	{ CommandVts,		"-vts",		"v",  "Set current mode min_vts", -1},
+	{ CommandLine,		"-line",	"l",  "Set current mode line_time_ns", -1},
+	{ CommandWriteHeader0,	"-header0",	"hd0","Write the BRCM header to output file 0", 0 },
+	{ CommandWriteTimestamps,"-timestps",	"ts", "Write timestamps to output file -1", 0 },
+	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -191,6 +214,17 @@ typedef struct {
 	int camera_num;
 	int exposure_us;
 	int i2c_bus;
+	char *regs;
+	int hinc;
+	int vinc;
+	double fps;
+	int width;
+	int height;
+	int vts;
+	int line;
+	int write_header0;
+	int write_timestamps;
+	int write_empty;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -384,9 +418,12 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 				file = fopen(filename, "wb");
 				if(file)
 				{
-					if (cfg->write_header)
-						fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
-					fwrite(buffer->data, buffer->length, 1, file);
+					if (!cfg->write_empty)
+					{
+						 if (cfg->write_header)
+							 fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+						 fwrite(buffer->data, buffer->length, 1, file);
+					}
 					fclose(file);
 				}
 				free(filename);
@@ -621,6 +658,79 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandRegs:  // register changes
+			{
+				int len = strlen(argv[i + 1]);
+				cfg->regs = malloc(len+1);
+				vcos_assert(cfg->regs);
+				strncpy(cfg->regs, argv[i + 1], len+1);
+				i++;
+				break;
+			}
+
+			case CommandHinc:
+				if (strlen(argv[i+1]) != 2 ||
+                                    sscanf(argv[i + 1], "%x", &cfg->hinc) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandVinc:
+				if (strlen(argv[i+1]) != 2 ||
+                                    sscanf(argv[i + 1], "%x", &cfg->vinc) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandFps:
+                                if (sscanf(argv[i + 1], "%lf", &cfg->fps) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandWidth:
+				if (sscanf(argv[i + 1], "%d", &cfg->width) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandHeight:
+				if (sscanf(argv[i + 1], "%d", &cfg->height) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandVts:
+				if (sscanf(argv[i + 1], "%d", &cfg->vts) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandLine:
+				if (sscanf(argv[i + 1], "%d", &cfg->line) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandWriteHeader0:
+				cfg->write_header0 = 1;
+				break;
+
+			case CommandWriteTimestamps:
+				cfg->write_timestamps = 1;
+				break;
+
+			case CommandWriteEmpty:
+				cfg->write_empty = 1;
+				break;
+
 			default:
 				valid = 0;
 				break;
@@ -634,6 +744,32 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 	}
 
 	return 0;
+}
+
+int reg_index(struct mode_def *sensor_mode, int r)
+{
+	int i;
+	for(i=sensor_mode->num_regs-1; i>=0; --i)
+	{
+		if (sensor_mode->regs[i].reg == r)
+			break;
+	}
+	if (i<0)
+	{
+		vcos_log_error("register %04x not found - aborting", r);
+		exit(-2);
+	}
+	return i;
+}
+
+int get_reg(struct mode_def *sensor_mode, int r)
+{
+	return sensor_mode->regs[reg_index(sensor_mode, r)].data;
+}
+
+void set_reg(struct mode_def *sensor_mode, int r, int b)
+{
+	sensor_mode->regs[reg_index(sensor_mode, r)].data = b;
 }
 
 int main(int argc, const char** argv) {
@@ -652,6 +788,18 @@ int main(int argc, const char** argv) {
 		.camera_num = -1,
 		.exposure_us = -1,
 		.i2c_bus = DEFAULT_I2C_DEVICE,
+		.regs = NULL,
+		.hinc = -1,
+		.vinc = -1,
+		.fps = -1,
+		.width = -1,
+		.height = -1,
+		.vts = -1,
+		.line = -1,
+		.write_header0 = 0,
+		.write_timestamps = 0,
+		.write_empty = 0,
+
 	};
 	uint32_t encoding;
 	const struct sensor_def *sensor;
@@ -694,6 +842,80 @@ int main(int argc, const char** argv) {
 		vcos_log_error("Invalid mode %d - aborting", cfg.mode);
 		return -2;
 	}
+
+
+	if (cfg.regs)
+	{
+		int r,b;
+		char *p,*q;
+
+		p=strtok(cfg.regs, ";");
+		while (p)
+		{
+			vcos_assert(strlen(p)>6);
+			vcos_assert(p[4]==',');
+			vcos_assdr(strlen(p)%2);
+			p[4]='\0'; q=p+5;
+			sscanf(p,"%4x",&r);
+			while(*q)
+			{
+				vcos_assert(isxdigit(q[0]));
+				vcos_assert(isxdigit(q[1]));
+
+				sscanf(q,"%2x",&b);	
+				vcos_log_error("%04x: %02x",r,b);    
+
+				set_reg(sensor_mode, r, b);
+
+				++r;
+				q+=2;
+			}
+			p=strtok(NULL,";");
+		}
+	}
+
+	if (cfg.hinc >= 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		set_reg(sensor_mode, 0x3814, cfg.hinc);
+	}
+
+	if (cfg.vinc >= 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		set_reg(sensor_mode, 0x3815, cfg.vinc);
+	}
+
+	if (cfg.fps > 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		int h = get_reg(sensor_mode, 0x380E);
+		int l = get_reg(sensor_mode, 0x380F);
+                int n = ((h<<8) + l) * sensor_mode->framerate / cfg.fps;
+		set_reg(sensor_mode, 0x380E, n>>8);
+		set_reg(sensor_mode, 0x380F, n&0xFF);
+	}
+
+	if (cfg.width > 0)
+	{
+		sensor_mode->width = cfg.width;
+	}
+
+	if (cfg.height > 0)
+	{
+		sensor_mode->height = cfg.height;
+	}
+
+	if (cfg.vts > 0)
+	{
+		sensor_mode->min_vts = cfg.vts;
+	}
+
+	if (cfg.line > 0)
+	{
+		sensor_mode->line_time_ns = cfg.line;
+	}
+
 
 	if(cfg.bit_depth == -1)
 	{
@@ -900,7 +1122,7 @@ int main(int argc, const char** argv) {
 
 	if (cfg.capture)
 	{
-		if (cfg.write_header)
+		if (cfg.write_header || cfg.write_header0)
 		{
 			brcm_header = (struct brcm_raw_header*)malloc(BRCM_RAW_HEADER_LENGTH);
 			if (brcm_header)
@@ -945,6 +1167,22 @@ int main(int argc, const char** argv) {
 					case 16:
 						brcm_header->mode.bayer_format = VC_IMAGE_BAYER_RAW16;
 						break;
+				}
+				if (cfg.write_header0)
+				{
+					// Save bcrm_header to 0th frame (only)
+					FILE *file;
+					char *filename = NULL;
+					if (create_filenames(&filename, cfg.output, 0) == MMAL_SUCCESS)
+					{
+						file = fopen(filename, "wb");
+						if(file)
+						{
+							fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+							fclose(file);
+						}
+						free(filename);
+					}
 				}
 			}
 		}
