@@ -116,7 +116,7 @@ Using **/dev/shm** ramdisk for storage is essential for high frame rates. You pr
 This is an example making use of most high frame rate command line options:
 
 	$ rm /dev/shm/out.*.raw
-	$ raspiraw -md 7 -t 1000 -hd0 -h 64 -v 65 -l 10000 --vinc 3D --fps 600 -r "380A,0040;3802,78;3806,05FF" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
+	$ raspiraw -md 7 -t 1000 -hd0 -h 64 -v 65 -l 10000 --vinc 3D --fps 600 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 	Using i2C device /dev/i2c-0
 	$ ls -l /dev/shm/out.*.raw | wc --lines
 	604
@@ -131,7 +131,7 @@ This command captures video from ov5647 camera on CSI-2 interface:
 * line_time_ns to 10000 (-l 10000)
 * doubles line scanning speed from 0x35 to 0x3D (--vinc 3D, sum 8 vs 16)
 * asks for 600 fps (--fps 600)
-* sets some ov5647 registers (380A,0040;3802,78;3806,05FF)
+* sets some ov5647 registers (380A,0040;3802,78;3806,0603)
 * sets saverate to 1 (save all frames)
 * outputs in "/dev/shm" ramdisk files starting with "out.0001.raw"
 * redirects standard error output (lots of mmal messages) to /dev/null (2>/dev/null)
@@ -147,7 +147,16 @@ You can use this small C code and know exactly what happens, or any other stretc
 
 	double out.0123.ppm > out.0123.ppm.d
 
-#### Creating .ogg video from dcraw processed and stretched .ppm frames
+Now some remarks on  -r "380A,0040;3802,78;3806,0603"  register changes.
+
+In above command we changed sensor mode height to 64 via "-h 64". This is reflected by "0040" stored in in DVP output vertical height registers 380A+380B.
+
+Looking up register difference between mode4 (1296x960) and mode5 (1296x720) it can be seen that y_addr_end register (380A+380B) difference (0x07A3 versus 0x06B3) is 0xF0=240. This is the reduction in vertical resulution between bothe modes. For being based on mode7 the higher value is 0x07A3=1955. Keeping 64 lines from 480 means reduction by 480-64=0x01A0 from 0x07A3, which is 0x0603.
+
+For this to work 78 is needed in register 3802 according diff between mode4 and mode5. 3802 top 4 bits are debug mode (7), while  lower 4 bits are bits [11:8] of y_add_start. Rgeister 3803 value for bits [7:0] of y_addr_start is 0x00. Not sure what 0x0800=2048 means since that is above vertical sensor row size. But that settings makes it work.
+
+
+#### Creation of .ogg video from dcraw processed and stretched .ppm frames
 
 First you need to convert the .ppm frames you are interested in into .png format, eg. with netpbm tools:
 
@@ -157,7 +166,7 @@ This gstreamer pipeline creates .ogg video. You can choose frame rate the video 
 
 	gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=300 caps="image/png,framerate=\(fraction\)1/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
-#### Creating of animated .gif from .ogg video
+#### Creation of animated .gif from .ogg video
 
 You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html). You only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
 
