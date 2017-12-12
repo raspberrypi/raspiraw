@@ -90,8 +90,8 @@ Timestamp distribution analysis can be easily done this way:
 	      2 3302
 	$ 
 
-This shows that majority of frame deltas are 1651us, and that two frame skips happened during recording.
-Frame skip indices can be easily determined by:
+This shows that majority of frame deltas are 1651us, which corresponds to 1000000/1651=605.7fps.
+Two frame skips happened during recording, and their indices can be easily determined by:
 
 	$ grep "^3" /dev/shm/out.-001.raw
 	3302,2,14461261624
@@ -99,6 +99,7 @@ Frame skip indices can be easily determined by:
 	$
 
 So we know that frames 0002-00090 have no frame skips.
+
 
 	--empty,	-emp	Write empty output files
 
