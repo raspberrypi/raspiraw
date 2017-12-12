@@ -86,7 +86,7 @@ This option allows to determine the maximal framerate **raspiraw** callback will
 
 	raspiraw -md 7 -t 3000 -emp {some options from this section} -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 
-Using **/dev/shm** ramdisk for storage is essential for high framerates. You precede this command by "rm /dev/shm/out.`<code>&ast;</code>`.raw" and do "ls -l /dev/shm/out.`<code>&ast;</code>`.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal framerate achievable for a given set of high framerate options.
+Using **/dev/shm** ramdisk for storage is essential for high framerates. You precede this command by "rm /dev/shm/out.&ast;.raw" and do "ls -l /dev/shm/out.&ast;.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal framerate achievable for a given set of high framerate options.
 
 
 
