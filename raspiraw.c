@@ -156,6 +156,17 @@ enum {
 	CommandCameraNum,
 	CommandExposureus,
 	CommandI2cBus,
+	CommandRegs,
+	CommandHinc,
+	CommandVinc,
+	CommandFps,
+	CommandWidth,
+	CommandHeight,
+	CommandVts,
+	CommandLine,
+	CommandWriteHeader0,
+	CommandWriteTimestamps,
+	CommandWriteEmpty,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -174,9 +185,24 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandCameraNum, 	"-cameranum",	"c",  "Set camera number to use (0=CAM0, 1=CAM1).", 1 },
 	{ CommandExposureus, 	"-expus",	"eus",  "Set the sensor exposure time in micro seconds.", -1 },
 	{ CommandI2cBus, 	"-i2c",	        "y",  "Set the I2C bus to use.", -1 },
+	{ CommandRegs,	 	"-regs",	"r",  "Change (current mode) regs", 0 },
+	{ CommandHinc,		"-hinc",	"hi", "Set horizontal odd/even inc reg", -1},
+	{ CommandVinc,		"-vinc",	"vi", "Set vertical odd/even inc reg", -1},
+	{ CommandFps,		"-fps",		"f",  "Set framerate regs", -1},
+	{ CommandWidth,		"-width",	"w",  "Set current mode width", -1},
+	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
+	{ CommandWriteHeader0,	"-header0",	"hd0","Sets filename to write the BRCM header to", 0 },
+	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
+	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
+
+typedef struct pts_node {
+	int	idx;
+	int64_t  pts;
+	struct pts_node *nxt;
+} *pts_node;
 
 typedef struct {
 	int mode;
@@ -193,6 +219,17 @@ typedef struct {
 	int camera_num;
 	int exposure_us;
 	int i2c_bus;
+	char *regs;
+	int hinc;
+	int vinc;
+	double fps;
+	int width;
+	int height;
+	char *write_header0;
+	char *write_timestamps;
+	int write_empty;
+        pts_node ptsa;
+        pts_node ptso;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -386,9 +423,19 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 				file = fopen(filename, "wb");
 				if(file)
 				{
-					if (cfg->write_header)
-						fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
-					fwrite(buffer->data, buffer->length, 1, file);
+					if (cfg->ptso)  // make sure previous malloc() was successful
+					{
+						cfg->ptso->idx = count;
+						cfg->ptso->pts = buffer->pts;
+						cfg->ptso->nxt = malloc(sizeof(struct pts_node));
+						cfg->ptso = cfg->ptso->nxt;
+					}
+					if (!cfg->write_empty)
+					{
+						 if (cfg->write_header)
+							 fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+						 fwrite(buffer->data, buffer->length, 1, file);
+					}
 					fclose(file);
 				}
 				free(filename);
@@ -470,7 +517,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 	for (i = 1; i < argc && valid; i++)
 	{
-		int command_id, num_parameters;
+		int command_id, num_parameters, len;
 
 		if (!argv[i])
 			continue;
@@ -529,7 +576,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandOutput:  // output filename
 			{
-				int len = strlen(argv[i + 1]);
+				len = strlen(argv[i + 1]);
 				if (len)
 				{
 					//We use sprintf to append the frame number for timelapse mode
@@ -623,6 +670,75 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandRegs:  // register changes
+			{
+				len = strlen(argv[i + 1]);
+				cfg->regs = malloc(len+1);
+				vcos_assert(cfg->regs);
+				strncpy(cfg->regs, argv[i + 1], len+1);
+				i++;
+				break;
+			}
+
+			case CommandHinc:
+				if (strlen(argv[i+1]) != 2 ||
+                                    sscanf(argv[i + 1], "%x", &cfg->hinc) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandVinc:
+				if (strlen(argv[i+1]) != 2 ||
+                                    sscanf(argv[i + 1], "%x", &cfg->vinc) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandFps:
+                                if (sscanf(argv[i + 1], "%lf", &cfg->fps) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandWidth:
+				if (sscanf(argv[i + 1], "%d", &cfg->width) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandHeight:
+				if (sscanf(argv[i + 1], "%d", &cfg->height) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
+			case CommandWriteHeader0:
+				len = strlen(argv[i + 1]);
+				cfg->write_header0 = malloc(len + 1);
+				vcos_assert(cfg->write_header0);
+				strncpy(cfg->write_header0, argv[i + 1], len+1);
+				i++;
+				break;
+
+			case CommandWriteTimestamps:
+				len = strlen(argv[i + 1]);
+				cfg->write_timestamps = malloc(len + 1);
+				vcos_assert(cfg->write_timestamps);
+				strncpy(cfg->write_timestamps, argv[i + 1], len+1);
+				i++;
+				cfg->ptsa = malloc(sizeof(struct pts_node));
+				cfg->ptso = cfg->ptsa;
+				break;
+
+			case CommandWriteEmpty:
+				cfg->write_empty = 1;
+				break;
+
 			default:
 				valid = 0;
 				break;
@@ -637,6 +753,35 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 	return 0;
 }
+
+int reg_index(struct mode_def *sensor_mode, int r)
+{
+	int i;
+	for(i=sensor_mode->num_regs-1; i>=0; --i)
+	{
+		if (sensor_mode->regs[i].reg == r)
+			break;
+	}
+	if (i<0)
+	{
+		vcos_log_error("register %04x not found - aborting", r);
+		exit(-2);
+	}
+	return i;
+}
+
+//The process first loads the cleaned up dump of the registers
+//than updates the known registers to the proper values
+//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
+enum operation {
+	EQUAL,	//Set bit to value
+	SET,	//Set bit
+	CLEAR,	//Clear bit
+	XOR	//Xor bit
+};
+
+void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
+
 
 int main(int argc, char** argv) {
 	RASPIRAW_PARAMS_T cfg = {
@@ -654,6 +799,17 @@ int main(int argc, char** argv) {
 		.camera_num = -1,
 		.exposure_us = -1,
 		.i2c_bus = DEFAULT_I2C_DEVICE,
+		.regs = NULL,
+		.hinc = -1,
+		.vinc = -1,
+		.fps = -1,
+		.width = -1,
+		.height = -1,
+		.write_header0 = NULL,
+		.write_timestamps = NULL,
+		.write_empty = 0,
+		.ptsa = NULL,
+		.ptso = NULL,
 	};
 	uint32_t encoding;
 	const struct sensor_def *sensor;
@@ -696,6 +852,73 @@ int main(int argc, char** argv) {
 		vcos_log_error("Invalid mode %d - aborting", cfg.mode);
 		return -2;
 	}
+
+
+	if (cfg.regs)
+	{
+		int r,b;
+		char *p,*q;
+
+		p=strtok(cfg.regs, ";");
+		while (p)
+		{
+			vcos_assert(strlen(p)>6);
+			vcos_assert(p[4]==',');
+			vcos_assert(strlen(p)%2);
+			p[4]='\0'; q=p+5;
+			sscanf(p,"%4x",&r);
+			while(*q)
+			{
+				vcos_assert(isxdigit(q[0]));
+				vcos_assert(isxdigit(q[1]));
+
+				sscanf(q,"%2x",&b);	
+				vcos_log_error("%04x: %02x",r,b);    
+
+				modReg(sensor_mode, r, 0, 7, b, EQUAL);
+
+				++r;
+				q+=2;
+			}
+			p=strtok(NULL,";");
+		}
+	}
+
+	if (cfg.hinc >= 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		modReg(sensor_mode, 0x3814, 0, 7, cfg.hinc, EQUAL);
+	}
+
+	if (cfg.vinc >= 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		modReg(sensor_mode, 0x3815, 0, 7, cfg.vinc, EQUAL);
+	}
+
+	if (cfg.fps > 0)
+	{
+                int n = 1000000000 / (sensor_mode->line_time_ns * cfg.fps);
+		if (n < sensor_mode->min_vts)
+		{
+			vcos_log_error("WARNING: computed VTS %d smaller than min_vts %d !", 
+					n, sensor_mode->min_vts);    
+		}
+		// ov5647 vts_reg_numbits is 10, imx vts_reg_numbits 16, so this is fine
+		modReg(sensor_mode, sensor->vts_reg+0, 0, 7, n>>8, EQUAL);
+		modReg(sensor_mode, sensor->vts_reg+1, 0, 7, n&0xFF, EQUAL);
+	}
+
+	if (cfg.width > 0)
+	{
+		sensor_mode->width = cfg.width;
+	}
+
+	if (cfg.height > 0)
+	{
+		sensor_mode->height = cfg.height;
+	}
+
 
 	if(cfg.bit_depth == -1)
 	{
@@ -902,7 +1125,7 @@ int main(int argc, char** argv) {
 
 	if (cfg.capture)
 	{
-		if (cfg.write_header)
+		if (cfg.write_header || cfg.write_header0)
 		{
 			brcm_header = (struct brcm_raw_header*)malloc(BRCM_RAW_HEADER_LENGTH);
 			if (brcm_header)
@@ -947,6 +1170,17 @@ int main(int argc, char** argv) {
 					case 16:
 						brcm_header->mode.bayer_format = VC_IMAGE_BAYER_RAW16;
 						break;
+				}
+				if (cfg.write_header0)
+				{
+					// Save bcrm_header into one file only
+					FILE *file;
+					file = fopen(cfg.write_header0, "wb");
+					if(file)
+					{
+						fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+						fclose(file);
+					}
 				}
 			}
 		}
@@ -1094,18 +1328,38 @@ component_destroy:
 	if (render)
 		mmal_component_destroy(render);
 
+	if (cfg.write_timestamps)
+	{
+		// Save timestamps
+		FILE *file;
+		file = fopen(cfg.write_timestamps, "wb");
+		if(file)
+		{
+			int64_t old;
+			for(pts_node aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
+			{
+				if (aux == cfg.ptsa)
+				{
+					fprintf(file, ",%d,%lld\n", aux->idx, aux->pts);
+				} else {
+					fprintf(file, "%lld,%d,%lld\n", aux->pts-old, aux->idx, aux->pts);
+				}
+				old = aux->pts;
+			}
+			fclose(file);
+		}
+
+		while (cfg.ptsa != cfg.ptso)
+		{
+			pts_node aux = cfg.ptsa->nxt;
+			free(cfg.ptsa);
+			cfg.ptsa = aux;
+		}
+		free(cfg.ptso);
+	}
+
 	return 0;
 }
-
-//The process first loads the cleaned up dump of the registers
-//than updates the known registers to the proper values
-//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
-enum operation {
-	EQUAL,	//Set bit to value
-	SET,	//Set bit
-	CLEAR,	//Clear bit
-	XOR	//Xor bit
-};
 
 void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum operation op)
 {
