@@ -854,7 +854,7 @@ int main(int argc, const char** argv) {
 		{
 			vcos_assert(strlen(p)>6);
 			vcos_assert(p[4]==',');
-			vcos_assdr(strlen(p)%2);
+			vcos_assert(strlen(p)%2);
 			p[4]='\0'; q=p+5;
 			sscanf(p,"%4x",&r);
 			while(*q)

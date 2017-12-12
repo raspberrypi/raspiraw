@@ -19,33 +19,33 @@ TODO: add description of uncovered options.
 
 ## raspiraw high framerate options
 
-Lookup ov5647, imx219 or adv7282m datasheet for register details.
+Lookup ov5647, imx219 or adv7282m datasheets for register details.
 
 #### I2C register setting options
 
 	--regs,		-r	Change (current mode) regs
 
 Allows to change sensor regs in selected sensor mode. Format is a semicolon separated string of assignments.
-An assignmen consists of a 4 hex digits register address, followed by a comma and one or more 2 hex digit byte values.
+An assignment consists of a 4 hex digits register address, followed by a comma and one or more 2 hex digit byte values.
 Restriction: Only registers present in selected sensor mode can be modified. Example argument: "380A,003C;3802,78;3806,05FB".
 In case more than one byte appears after the comma, the byte values get written to next adresses.
 
 	--hinc,		-hi	Set horizontal odd/even inc reg
 
-Sets the horizontal odd and even increment numbers. Argument is a 2 hex digits byte. "-hi xy" is convenience shortcut for "3814,xy" in -regs for ov5647 sensor. Lookup the sensor mode registers for your sensor header file for default value. TODO: Needs to be extended to deal the other sensors as well.
+Sets the horizontal odd and even increment numbers. Argument is a 2 hex digits byte. "-hi xy" is convenience shortcut for "3814,xy" in --regs for ov5647 sensor. Lookup the sensor mode registers for your sensor header file for default values. TODO: Needs to be extended to deal with the other sensors as well.
 
 	--vinc,		-vi	Set vertical odd/even inc reg
 
-Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byte. "-hi xy" is convenience shortcut for "3815,xy" in -regs for ov5647 sensor. TODO: Needs to be extended to deal wth the other sensors as well.
+Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byte. "-vi xy" is convenience shortcut for "3815,xy" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
 	--fps,		-f	Set framerate regs
 
-Sets the target framerate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in -regs for OV5647 sensor. TODO: Needs to be extended to deal the other sensors as well.
+Sets the requested framerate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
 
 #### Sensor mode setting options
 
-The following options allow to overwrite some sensor mode setting for current sensor mode.
+The following options allow to overwrite some sensor mode settings for current sensor mode.
 
 	--width,	-w	Set current mode width
 
@@ -68,7 +68,7 @@ Sets the line_time_ns value of current mode.
 
 	--header0,	-hd0	Write the BRCM header to output file 0
 
-For high framerate modes writing BRCM header to each files is bottleneck.
+For high framerate modes writing BRCM header to each file is a bottleneck.
 So this option is a replacement for "--header"/"-hd" option.
 Instead of writing header to each frame file, it is written to frame 0 file only.
 Since frame 0 will not be written normally it is a good place.
@@ -82,11 +82,11 @@ If this option is selected, a timestamp delta analysis is done and written to ou
 
 	--empty,	-emp	Write empty output files
 
-This option allows to determine the maximal framerate **raspiraw** callback will be triggered. Only empty files will be written for the frames, but the filenames allow to count who many. This would be an example use:
+This option allows to determine the maximal framerate **raspiraw** callback will be triggered. Only empty files will be written for the frames, but the filenames allow to count how many. This would be an example use:
 
 	raspiraw -md 7 -t 3000 -emp {some options from this section} -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 
-Using **/dev/shm** ramdisk for storage is essential for high framerates. You precede this command by "rm /dev/shm/out.*.raw" and do "ls -l /dev/shm/out.*.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal framerate achievable for a given set of high framerate options.
+Using **/dev/shm** ramdisk for storage is essential for high framerates. You precede this command by "rm /dev/shm/out.`<code>&ast;</code>`.raw" and do "ls -l /dev/shm/out.`<code>&ast;</code>`.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal framerate achievable for a given set of high framerate options.
 
 
 
@@ -124,5 +124,21 @@ Since line scanning speed was doubled, the captured 128x64 frames need to be str
 You can use this small C code and know exactly what happens, or any other stretching program (gimp, netpbm tools, ...):
 [double.c](https://stamm-wilbrandt.de/en/forum/double.c)
 
-	double out.0123.ppm > out.0123.d.ppm
+	double out.0123.ppm > out.0123.ppm.d
+
+#### Creating .ogg video from dcraw processed and stretched .ppm frames
+
+First you need to convert the .ppm frames you are interested in into .png format, eg. with netpbm tools:
+
+	pnmtopng out.0123.ppm.d > out.0123.ppm.d.png 
+
+This gstreamer pipeline creates .ogg video. You can choose framerate the video should play with (eg. 1fps for very slow motion), and start index of the frames to be taken. 
+
+	gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=300 caps="image/png,framerate=\(fraction\)1/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
+
+#### Creating of animated .gif from .ogg video
+
+You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html). Yu only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
+
+	gifenc.sh $1.ogg $1.anim.gif
 
