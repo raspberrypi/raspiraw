@@ -17,9 +17,9 @@ Execute raspiraw to get command help:
 
 TODO: add description of uncovered options. 
 
-## raspiraw high framerate options
+## raspiraw high frame rate options
 
-Lookup ov5647, imx219 or adv7282m datasheets for register details.
+Lookup ov5647, imx219 or adv7282m data sheets for register details.
 
 #### I2C register setting options
 
@@ -28,7 +28,7 @@ Lookup ov5647, imx219 or adv7282m datasheets for register details.
 Allows to change sensor regs in selected sensor mode. Format is a semicolon separated string of assignments.
 An assignment consists of a 4 hex digits register address, followed by a comma and one or more 2 hex digit byte values.
 Restriction: Only registers present in selected sensor mode can be modified. Example argument: "380A,003C;3802,78;3806,05FB".
-In case more than one byte appears after the comma, the byte values get written to next adresses.
+In case more than one byte appears after the comma, the byte values get written to next addresses.
 
 	--hinc,		-hi	Set horizontal odd/even inc reg
 
@@ -38,9 +38,9 @@ Sets the horizontal odd and even increment numbers. Argument is a 2 hex digits b
 
 Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byte. "-vi xy" is convenience shortcut for "3815,xy" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
-	--fps,		-f	Set framerate regs
+	--fps,		-f	Set frame rate regs
 
-Sets the requested framerate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
+Sets the requested frame rate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
 
 #### Sensor mode setting options
@@ -68,7 +68,7 @@ Sets the line_time_ns value of current mode.
 
 	--header0,	-hd0	Write the BRCM header to output file 0
 
-For high framerate modes writing BRCM header to each file is a bottleneck.
+For high frame rate modes writing BRCM header to each file is a bottleneck.
 So this option is a replacement for "--header"/"-hd" option.
 Instead of writing header to each frame file, it is written to frame 0 file only.
 Since frame 0 will not be written normally it is a good place.
@@ -77,22 +77,22 @@ For decoding ith frame with **dcraw** later, you need to concatenate frame 0 and
 	--timestps,	-ts	Write timestamps to output file -1
 
 With this option timestamps for the captured frames get written to output file -1.
-This happens after video has been captured, so does not negatively affect capture framerate.
+This happens after video has been captured, so does not negatively affect capture frame rate.
 If this option is selected, a timestamp delta analysis is done and written to output, inclusive frame miss output.
 
 	--empty,	-emp	Write empty output files
 
-This option allows to determine the maximal framerate **raspiraw** callback will be triggered. Only empty files will be written for the frames, but the filenames allow to count how many. This would be an example use:
+This option allows to determine the maximal frame rate **raspiraw** callback will be triggered. Only empty files will be written for the frames, but the filenames allow to count how many. This would be an example use:
 
 	raspiraw -md 7 -t 3000 -emp {some options from this section} -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 
-Using **/dev/shm** ramdisk for storage is essential for high framerates. You precede this command by "rm /dev/shm/out.&ast;.raw" and do "ls -l /dev/shm/out.&ast;.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal framerate achievable for a given set of high framerate options.
+Using **/dev/shm** ramdisk for storage is essential for high frame rates. You precede this command by "rm /dev/shm/out.&ast;.raw" and do "ls -l /dev/shm/out.&ast;.raw | wc --lines" afterwards to determine the number of frames written ("-sr 1" means saverate 1 or writing all frames received from camera). "--empty" option allows to determine upper bounds for the absolute maximal frame rate achievable for a given set of high frame rate options.
 
 
 
 #### Examples:
 
-This is an example making use of most high framerate command line options:
+This is an example making use of most high frame rate command line options:
 
 	$ rm /dev/shm/out.*.raw
 	$ raspiraw -md 7 -t 1000 -hd0 -h 64 -v 65 -l 10000 --vinc 3D --fps 600 -r "380A,0040;3802,78;3806,05FF" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
@@ -132,15 +132,15 @@ First you need to convert the .ppm frames you are interested in into .png format
 
 	pnmtopng out.0123.ppm.d > out.0123.ppm.d.png 
 
-This gstreamer pipeline creates .ogg video. You can choose framerate the video should play with (eg. 1fps for very slow motion), and start index of the frames to be taken. 
+This gstreamer pipeline creates .ogg video. You can choose frame rate the video should play with (eg. 1fps for very slow motion), and start index of the frames to be taken. 
 
 	gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=300 caps="image/png,framerate=\(fraction\)1/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
 #### Creating of animated .gif from .ogg video
 
-You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html). Yu only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
+You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html). You only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
 
 	gifenc.sh $1.ogg $1.anim.gif
 
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
-![360fps sample video](https://stamm-wilbrandt.de/en/forum/out.360fps.25xSlower.anim.gif)
+![360fps sample video](https://stamm-wilbrandt.de/en/forum/out.360fps.25xSlower.2.anim.gif)
