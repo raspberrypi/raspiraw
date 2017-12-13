@@ -27,18 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-// These register settings were as logged off the line
-// by jbeale. There is a datasheet for OV5647 floating
-// about on the internet, but the Pi Foundation/Trading have
-// information from Omnivision under NDA, therefore
-// we can not offer support on this.
-// There is some information/discussion on the Freescale
-// i.MX6 forums about supporting OV5647 on that board.
-// There may be information available there that is of use.
-//
-// REQUESTS FOR SUPPORT ABOUT THESE REGISTER VALUES WILL
-// BE IGNORED.
-
 #ifndef ADV7282M_MODES_H_
 #define ADV7282M_MODES_H_
 
