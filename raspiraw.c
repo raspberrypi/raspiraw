@@ -192,8 +192,8 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
 	{ CommandVts,		"-vts",		"v",  "Set current mode min_vts", -1},
 	{ CommandLine,		"-line",	"l",  "Set current mode line_time_ns", -1},
-	{ CommandWriteHeader0,	"-header0",	"hd0","Write the BRCM header to output file 0", 0 },
-	{ CommandWriteTimestamps,"-tstamps",	"ts", "Write timestamps to output file -1", 0 },
+	{ CommandWriteHeader0,	"-header0",	"hd0","Sets filename to write the BRCM header to", 0 },
+	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
 };
 
@@ -228,8 +228,8 @@ typedef struct {
 	int height;
 	int vts;
 	int line;
-	int write_header0;
-	int write_timestamps;
+	char *write_header0;
+	char *write_timestamps;
 	int write_empty;
         pts_node ptsa;
         pts_node ptso;
@@ -520,7 +520,7 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 
 	for (i = 1; i < argc && valid; i++)
 	{
-		int command_id, num_parameters;
+		int command_id, num_parameters, len;
 
 		if (!argv[i])
 			continue;
@@ -579,7 +579,7 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandOutput:  // output filename
 			{
-				int len = strlen(argv[i + 1]);
+				len = strlen(argv[i + 1]);
 				if (len)
 				{
 					//We use sprintf to append the frame number for timelapse mode
@@ -675,7 +675,7 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandRegs:  // register changes
 			{
-				int len = strlen(argv[i + 1]);
+				len = strlen(argv[i + 1]);
 				cfg->regs = malloc(len+1);
 				vcos_assert(cfg->regs);
 				strncpy(cfg->regs, argv[i + 1], len+1);
@@ -735,11 +735,19 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 				break;
 
 			case CommandWriteHeader0:
-				cfg->write_header0 = 1;
+				len = strlen(argv[i + 1]);
+				cfg->write_header0 = malloc(len + 1);
+				vcos_assert(cfg->write_header0);
+				strncpy(cfg->write_header0, argv[i + 1], len+1);
+				i++;
 				break;
 
 			case CommandWriteTimestamps:
-				cfg->write_timestamps = 1;
+				len = strlen(argv[i + 1]);
+				cfg->write_timestamps = malloc(len + 1);
+				vcos_assert(cfg->write_timestamps);
+				strncpy(cfg->write_timestamps, argv[i + 1], len+1);
+				i++;
 				cfg->ptsa = malloc(sizeof(struct pts_node));
 				cfg->ptso = cfg->ptsa;
 				break;
@@ -813,8 +821,8 @@ int main(int argc, const char** argv) {
 		.height = -1,
 		.vts = -1,
 		.line = -1,
-		.write_header0 = 0,
-		.write_timestamps = 0,
+		.write_header0 = NULL,
+		.write_timestamps = NULL,
 		.write_empty = 0,
 		.ptsa = NULL,
 		.ptso = NULL,
@@ -1188,18 +1196,13 @@ int main(int argc, const char** argv) {
 				}
 				if (cfg.write_header0)
 				{
-					// Save bcrm_header to 0th frame (only)
+					// Save bcrm_header into one file only
 					FILE *file;
-					char *filename = NULL;
-					if (create_filenames(&filename, cfg.output, 0) == MMAL_SUCCESS)
+					file = fopen(cfg.write_header0, "wb");
+					if(file)
 					{
-						file = fopen(filename, "wb");
-						if(file)
-						{
-							fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
-							fclose(file);
-						}
-						free(filename);
+						fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+						fclose(file);
 					}
 				}
 			}
@@ -1350,28 +1353,23 @@ component_destroy:
 
 	if (cfg.write_timestamps)
 	{
-		// Save timestamps to frame "-1"
+		// Save timestamps
 		FILE *file;
-		char *filename = NULL;
-		if (create_filenames(&filename, cfg.output, -1) == MMAL_SUCCESS)
+		file = fopen(cfg.write_timestamps, "wb");
+		if(file)
 		{
-			file = fopen(filename, "wb");
-			if(file)
+			int64_t old;
+			for(pts_node aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
 			{
-				int64_t old;
-				for(pts_node aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
+				if (aux == cfg.ptsa)
 				{
-					if (aux == cfg.ptsa)
-					{
-						fprintf(file, ",%d,%lld\n", aux->idx, aux->pts);
-					} else {
-						fprintf(file, "%lld,%d,%lld\n", aux->pts-old, aux->idx, aux->pts);
-					}
-					old = aux->pts;
+					fprintf(file, ",%d,%lld\n", aux->idx, aux->pts);
+				} else {
+					fprintf(file, "%lld,%d,%lld\n", aux->pts-old, aux->idx, aux->pts);
 				}
-				fclose(file);
+				old = aux->pts;
 			}
-			free(filename);
+			fclose(file);
 		}
 
 		while (cfg.ptsa != cfg.ptso)

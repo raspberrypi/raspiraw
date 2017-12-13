@@ -66,23 +66,22 @@ Sets the line_time_ns value of current mode.
 
 #### File output settings
 
-	--header0,	-hd0	Write the BRCM header to output file 0
+	--header0,	-hd0	Write the BRCM header to output file
 
 For high frame rate modes writing BRCM header to each file is a bottleneck.
 So this option is a replacement for "--header"/"-hd" option.
-Instead of writing header to each frame file, it is written to frame 0 file only.
-Since frame 0 will not be written normally it is a good place.
-For decoding ith frame with **dcraw** later, you need to concatenate frame 0 and frame i and store somewhere, then **dcraw** that file.
+Instead of writing header to each frame file, it is written to specified output file only.
+For decoding ith frame with **dcraw** later, you need to concatenate specified output file and frame i and store somewhere, then **dcraw** that file.
 
-	--tstamps,	-ts	Write timestamps to output file -1
+	--tstamps,	-ts	Write timestamps to output file
 
-With this option timestamps for the captured frames get written to output file -1.
+With this option timestamps for the captured frames get written to specified output file.
 This happens after video has been captured, so does not negatively affect capture frame rate.
 Format: "delta,index,timestamp\n"
 
 Timestamp distribution analysis can be easily done this way:
 
-	$ cat /dev/shm/out.-001.raw | cut -f1 -d, | sort -n | uniq -c
+	$ cat tstamps.txt | cut -f1 -d, | sort -n | uniq -c
 	      1 
 	     65 1650
 	    531 1651
@@ -93,7 +92,7 @@ Timestamp distribution analysis can be easily done this way:
 This shows that majority of frame deltas are 1651us, which corresponds to 1000000/1651=605.7fps.
 Two frame skips happened during recording, and their indices can be easily determined by:
 
-	$ grep "^3" /dev/shm/out.-001.raw
+	$ grep "^3" tstamps.txt
 	3302,2,14461261624
 	3302,91,14461410205
 	$
