@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ctype.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -458,7 +459,7 @@ uint32_t order_and_bit_depth_to_encoding(enum bayer_order order, int bit_depth)
  * @param state Pointer to state structure to assign any discovered parameters to
  * @return non-0 if failed for some reason, 0 otherwise
  */
-static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
+static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 {
 	// Parse the command line arguments.
 	// We are looking for --<something> or -<abbreviation of something>
@@ -636,7 +637,7 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 	return 0;
 }
 
-int main(int argc, const char** argv) {
+int main(int argc, char** argv) {
 	RASPIRAW_PARAMS_T cfg = {
 		.mode = 0,
 		.hflip = 0,
