@@ -426,7 +426,7 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 				file = fopen(filename, "wb");
 				if(file)
 				{
-					if (cfg->write_timestamps)
+					if (cfg->ptso)  // make sure previous malloc() was successful
 					{
 						cfg->ptso->idx = count;
 						cfg->ptso->pts = buffer->pts;

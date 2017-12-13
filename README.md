@@ -153,7 +153,7 @@ In above command we changed sensor mode height to 64 via "-h 64". This is reflec
 
 Looking up register difference between mode4 (1296x960) and mode5 (1296x720) it can be seen that y_addr_end register (3806+3807) difference (0x07A3 versus 0x06B3) is 0xF0=240. This is the reduction in vertical resulution between both modes. For being based on mode7 the higher value is 0x07A3=1955. Keeping 64 lines from 480 means reduction by 480-64=0x01A0 from 0x07A3, which is 0x0603.
 
-For this to work 78 is needed in register 3802 according diff between mode4 and mode5. 3802 top 4 bits are debug mode (7), while  lower 4 bits are bits [11:8] of y_addr_start. Register 3803 value for bits [7:0] of y_addr_start is 0x00. Not sure what 0x0800=2048 means since that is above vertical sensor row size. But that settings makes it work.
+For this to work 78 is needed in register 3802 according diff between mode4 and mode5. 3802 top 4 bits are debug mode (7), while  lower 4 bits are bits [11:8] of y_addr_start. Register 3803 value for bits [7:0] of y_addr_start is 0x00. Not sure what 0x0800=2048 means since that is above vertical sensor row size. But that setting makes it work.
 
 
 #### Creation of .ogg video from dcraw processed and stretched .ppm frames
