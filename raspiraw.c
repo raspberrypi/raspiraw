@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define VERSION_STRING "0.0.1"
 
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <fcntl.h>
 #include <libgen.h>
