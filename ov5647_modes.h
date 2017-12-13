@@ -869,7 +869,7 @@ struct sensor_def ov5647 = {
    .exposure_reg_num_bits = 20,
 
    .vts_reg =              0x380E,
-   .vts_reg_num_bits =     20,
+   .vts_reg_num_bits =     10,
 
    .gain_reg =             0x350A,
    .gain_reg_num_bits =    10,
