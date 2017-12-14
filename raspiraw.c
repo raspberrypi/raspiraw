@@ -88,7 +88,6 @@ struct mode_def
 	uint8_t data_lanes;
 	unsigned int min_vts;
 	int line_time_ns;
-	uint16_t framerate;
 	uint32_t timing1;
 	uint32_t timing2;
 	uint32_t timing3;
@@ -190,8 +189,6 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandFps,		"-fps",		"f",  "Set framerate regs", -1},
 	{ CommandWidth,		"-width",	"w",  "Set current mode width", -1},
 	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
-	{ CommandVts,		"-vts",		"v",  "Set current mode min_vts", -1},
-	{ CommandLine,		"-line",	"l",  "Set current mode line_time_ns", -1},
 	{ CommandWriteHeader0,	"-header0",	"hd0","Sets filename to write the BRCM header to", 0 },
 	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
@@ -226,8 +223,6 @@ typedef struct {
 	double fps;
 	int width;
 	int height;
-	int vts;
-	int line;
 	char *write_header0;
 	char *write_timestamps;
 	int write_empty;
@@ -720,20 +715,6 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
-			case CommandVts:
-				if (sscanf(argv[i + 1], "%d", &cfg->vts) != 1)
-					valid = 0;
-				else
-					i++;
-				break;
-
-			case CommandLine:
-				if (sscanf(argv[i + 1], "%d", &cfg->line) != 1)
-					valid = 0;
-				else
-					i++;
-				break;
-
 			case CommandWriteHeader0:
 				len = strlen(argv[i + 1]);
 				cfg->write_header0 = malloc(len + 1);
@@ -787,12 +768,6 @@ int reg_index(struct mode_def *sensor_mode, int r)
 	return i;
 }
 
-int get_reg(struct mode_def *sensor_mode, int r)
-{
-	return sensor_mode->regs[reg_index(sensor_mode, r)].data;
-}
-
-
 //The process first loads the cleaned up dump of the registers
 //than updates the known registers to the proper values
 //based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
@@ -828,8 +803,6 @@ int main(int argc, const char** argv) {
 		.fps = -1,
 		.width = -1,
 		.height = -1,
-		.vts = -1,
-		.line = -1,
 		.write_header0 = NULL,
 		.write_timestamps = NULL,
 		.write_empty = 0,
@@ -923,12 +896,15 @@ int main(int argc, const char** argv) {
 
 	if (cfg.fps > 0)
 	{
-		// TODO: handle modes different to ov5647 as well
-		int h = get_reg(sensor_mode, 0x380E);
-		int l = get_reg(sensor_mode, 0x380F);
-                int n = ((h<<8) + l) * sensor_mode->framerate / cfg.fps;
-		modReg(sensor_mode, 0x380E, 0, 7, n>>8, EQUAL);
-		modReg(sensor_mode, 0x380F, 0, 7, n&0xFF, EQUAL);
+                int n = 1000000000 / (sensor_mode->line_time_ns * cfg.fps);
+		if (n < sensor_mode->min_vts)
+		{
+			vcos_log_error("WARNING: computed VTS %d smaller than min_vts %d !", 
+					n, sensor_mode->min_vts);    
+		}
+		// ov5647 vts_reg_numbits is 10, imx vts_reg_numbits 16, so this is fine
+		modReg(sensor_mode, sensor->vts_reg+0, 0, 7, n>>8, EQUAL);
+		modReg(sensor_mode, sensor->vts_reg+1, 0, 7, n&0xFF, EQUAL);
 	}
 
 	if (cfg.width > 0)
@@ -939,16 +915,6 @@ int main(int argc, const char** argv) {
 	if (cfg.height > 0)
 	{
 		sensor_mode->height = cfg.height;
-	}
-
-	if (cfg.vts > 0)
-	{
-		sensor_mode->min_vts = cfg.vts;
-	}
-
-	if (cfg.line > 0)
-	{
-		sensor_mode->line_time_ns = cfg.line;
 	}
 
 

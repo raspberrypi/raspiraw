@@ -103,7 +103,7 @@ struct sensor_regs imx219_8MPix[] =
 };
 
 struct mode_def imx219_modes[] = {
-   { imx219_8MPix, NUM_ELEMENTS(imx219_8MPix), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2504, 18904, 15 },
+   { imx219_8MPix, NUM_ELEMENTS(imx219_8MPix), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2504, 18904 },
 };
 
 //From https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c
@@ -136,7 +136,7 @@ struct sensor_def imx219 = {
       .exposure_reg =         0x015A,
       .exposure_reg_num_bits = 16,
 
-      .vts_reg =              0x0160,
+      .vts_reg =              0x0162,  // VTS:  Line length (above)  or  total vertical size (ov5467)
       .vts_reg_num_bits =     16,
 
       .gain_reg =             0x0157,

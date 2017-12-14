@@ -830,14 +830,14 @@ struct sensor_regs ov5647_mode7[] =
 };
 
 struct mode_def ov5647_modes[] = {
-   { ov5647_5MPix, NUM_ELEMENTS(ov5647_5MPix), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968,  32503, 15 },
-   { ov5647_mode1, NUM_ELEMENTS(ov5647_mode1), 1920, 1080, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1104,  29584, 30 },
-   { ov5647_mode2, NUM_ELEMENTS(ov5647_mode2), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968,  32503, 15 },
-   { ov5647_mode3, NUM_ELEMENTS(ov5647_mode3), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968, 183789,  1 },
-   { ov5647_mode4, NUM_ELEMENTS(ov5647_mode4), 1296,  976, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  996,  23216, 30 },
-   { ov5647_mode5, NUM_ELEMENTS(ov5647_mode5), 1296,  730, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  870,  23216, 30 },
-   { ov5647_mode6, NUM_ELEMENTS(ov5647_mode6),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  31749, 42 },
-   { ov5647_mode7, NUM_ELEMENTS(ov5647_mode7),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  21165, 60 },
+   { ov5647_5MPix, NUM_ELEMENTS(ov5647_5MPix), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968,  32503 },
+   { ov5647_mode1, NUM_ELEMENTS(ov5647_mode1), 1920, 1080, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1104,  29584 },
+   { ov5647_mode2, NUM_ELEMENTS(ov5647_mode2), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968,  32503 },
+   { ov5647_mode3, NUM_ELEMENTS(ov5647_mode3), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968, 183789 },
+   { ov5647_mode4, NUM_ELEMENTS(ov5647_mode4), 1296,  976, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  996,  23216 },
+   { ov5647_mode5, NUM_ELEMENTS(ov5647_mode5), 1296,  730, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  870,  23216 },
+   { ov5647_mode6, NUM_ELEMENTS(ov5647_mode6),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  31749 },
+   { ov5647_mode7, NUM_ELEMENTS(ov5647_mode7),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  21165 },
 };
 
 #undef addreg
@@ -869,7 +869,7 @@ struct sensor_def ov5647 = {
    .exposure_reg_num_bits = 20,
 
    .vts_reg =              0x380E,
-   .vts_reg_num_bits =     20,
+   .vts_reg_num_bits =     10,      // total vertical size [9:8] and [7:0] (ov5647 datasheet)
 
    .gain_reg =             0x350A,
    .gain_reg_num_bits =    10,

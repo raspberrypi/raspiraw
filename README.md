@@ -115,7 +115,7 @@ Using **/dev/shm** ramdisk for storage is essential for high frame rates. You pr
 This is an example making use of most high frame rate command line options:
 
 	$ rm /dev/shm/out.*.raw
-	$ raspiraw -md 7 -t 1000 -hd0 -h 64 -v 65 -l 10000 --vinc 3D --fps 600 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
+	$ raspiraw -md 7 -t 1000 -ts tstamps.csv -hd0 hd0.raw -h 64 --vinc 1F --fps 600 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 	Using i2C device /dev/i2c-0
 	$ ls -l /dev/shm/out.*.raw | wc --lines
 	604
@@ -124,11 +124,11 @@ This is an example making use of most high frame rate command line options:
 This command captures video from ov5647 camera on CSI-2 interface:
 * based on 640x480 mode (-md 7)
 * captures for 1s (-t 1000)
-* stores BCRM header needed for dcraw only once in output file 0 (-hd0)
+* stores us timestamps in file tstamps.csv (-ts)
+* stores BCRM header needed for dcraw only once in file hd0.raw  (-hd0)
 * sets frame capture height to 64 (-h 64)
-* sensor mode vts setting a bit higher (-v 65)
-* line_time_ns to 10000 (-l 10000)
-* doubles line scanning speed from 0x35 to 0x3D (--vinc 3D, sum 8 vs 16)
+* doubles line scanning speed from 0x35 to 0x1F (--vinc 1F, sum 8 vs 16) 
+* increases line skipping to 1 and 15 instead of 3 and 5. Results in doubling vertical covered area (--vinc 1F, sum 8 vs 16). 1F shows colors (see below), 3D result is pale
 * asks for 600 fps (--fps 600)
 * sets some ov5647 registers (380A,0040;3802,78;3806,0603)
 * sets saverate to 1 (save all frames)
@@ -137,14 +137,17 @@ This command captures video from ov5647 camera on CSI-2 interface:
 
 For being able to convert frame 123 captured frame with **dcraw** these steps are necessary (because of -hd0):
 
-	cat /dev/shm/out.0000.raw /dev/shm/out.0123.raw > out.0123.raw
+	cat hd0.raw /dev/shm/out.0123.raw > out.0123.raw
 	dcraw out.0123.raw
 
 Since line scanning speed was doubled, the captured 128x64 frames need to be stretched by factor 2.
-You can use this small C code and know exactly what happens, or any other stretching program (gimp, netpbm tools, ...):
+You can use this small C code and know exactly what happens, or any other stretching program (gimp, netpbm tools, ...), the result is still a .ppm format file:
 [double.c](https://stamm-wilbrandt.de/en/forum/double.c)
 
 	double out.0123.ppm > out.0123.ppm.d
+
+![600fps sample frame just described](https://stamm-wilbrandt.de/en/forum/out.0123.ppm.d.png)
+
 
 Now some remarks on  -r "380A,0040;3802,78;3806,0603"  register changes.
 
