@@ -9,6 +9,10 @@ reverse engineered how the firmware is working (eg by listening to the
 I2C communications).
 
 
+The raw Bayer format frames captured by **raspiraw** can be converted to .ppm images by modified **dcraw** image processing app:
+[a link](https://github.com/6by9/dcraw)
+
+
 ## Common Command line Options 
 
 Execute raspiraw to get command help:
@@ -97,7 +101,7 @@ Timestamp distribution analysis can be easily done this way:
 	$ 
 
 
-This shows that frame deltas are 1503&micro;s &plusmn; &micro;s, which corresponds to 1000000/1503=665.3fps.
+This shows that frame deltas are 1503&micro;s &plusmn; 4&micro;s, which corresponds to 1,000,000/1503=665.3fps.
 Three frame skips happened during recording, and their indices can be easily determined by:
 
 	$ grep "^3" tstamps.csv 
@@ -133,8 +137,8 @@ This is an example making use of most high frame rate command line options:
 This command captures video from ov5647 camera on CSI-2 interface:
 * based on 640x480 mode (-md 7)
 * captures for 1s (-t 1000)
-* stores us timestamps in file tstamps.csv (-ts)
-* stores BCRM header needed for dcraw only once in file hd0.raw  (-hd0)
+* stores &micro;s timestamps in file tstamps.csv (-ts)
+* stores BCRM header needed for **dcraw** only once in file hd0.raw  (-hd0)
 * sets frame capture height to 64 (-h 64)
 * doubles line scanning speed from 0x35 to 0x1F (--vinc 1F, sum 8 vs 16) 
 * increases line skipping to 1 and 15 instead of 3 and 5. Results in doubling vertical covered area (--vinc 1F, sum 8 vs 16). 1F shows colors (see below), 3D result is pale
@@ -167,7 +171,7 @@ Looking up register difference between mode4 (1296x960) and mode5 (1296x720) it 
 For this to work 78 is needed in register 3802 according diff between mode4 and mode5. 3802 top 4 bits are debug mode (7), while  lower 4 bits are bits [11:8] of y_addr_start. Register 3803 value for bits [7:0] of y_addr_start is 0x00. Not sure what 0x0800=2048 means since that is above vertical sensor row size. But that setting makes it work.
 
 
-#### Creation of .ogg video from dcraw processed and stretched .ppm frames
+#### Creation of .ogg video from **dcraw** processed and stretched .ppm frames
 
 First you need to convert the .ppm frames you are interested in into .png format, eg. with netpbm tools:
 
