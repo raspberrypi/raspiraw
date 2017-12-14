@@ -10,7 +10,8 @@ I2C communications).
 
 
 The raw Bayer format frames captured by **raspiraw** can be converted to .ppm images by modified **dcraw** image processing app:
-[a link](https://github.com/6by9/dcraw)
+
+[https://github.com/6by9/dcraw](https://github.com/6by9/dcraw)
 
 
 ## Common Command line Options 
@@ -159,7 +160,7 @@ You can use this small C code and know exactly what happens, or any other stretc
 
 	double out.0123.ppm > out.0123.ppm.d
 
-![600fps sample frame just described](https://stamm-wilbrandt.de/en/forum/out.0123.ppm.d.png)
+![600fps sample frame just described](out.0123.ppm.d.png)
 
 
 Now some remarks on  -r "380A,0040;3802,78;3806,0603"  register changes.
@@ -188,4 +189,4 @@ You can create high quality animated .gif from .ogg video with ffmpeg based [gif
 	gifenc.sh $1.ogg $1.anim.gif
 
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
-![360fps sample video](https://stamm-wilbrandt.de/en/forum/out.360fps.25xSlower.2.anim.gif)
+![360fps sample video](out.360fps.25xSlower.2.anim.gif)
