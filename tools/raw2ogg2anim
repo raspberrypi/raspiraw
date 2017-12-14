@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
+
+echo "copying /dev/shm/out.????.raw files"
+for((f=100; f<200; ++f))
+do
+  # cp /dev/shm/out.0$f.raw .
+  cat hd0.raw /dev/shm/out.0$f.raw > out.0$f.raw
+  echo -en "$f     \r"
+done
+echo
+
+echo "dcraw each .raw file (to .ppm)"
+for f in *.raw
+do
+  dcraw $f
+  echo -en "$f     \r"
+done
+echo
+
+echo ".ppm -> .ppm.d"
+for f in *.ppm
+do
+  double $f > $f.d
+  echo -en "$f     \r"
+done
+echo
+
+echo ".ppm.d -> .ppm.d.png"
+for f in *.ppm.d
+do
+  pnmtopng $f > $f.png
+  echo -en "$f     \r"
+done
+echo
+
+echo "now creating $1.ogg"
+gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=1 caps="image/png,framerate=\(fraction\)25/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
+
+echo "now creating $1.anim.gif"
+gifenc.sh $1.ogg $1.anim.gif
+
+echo "done"
