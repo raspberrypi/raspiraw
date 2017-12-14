@@ -160,7 +160,7 @@ You can use this small C code and know exactly what happens, or any other stretc
 
 	double out.0123.ppm > out.0123.ppm.d
 
-![600fps sample frame just described](out.0123.ppm.d.png)
+![600fps sample frame just described](res/out.0123.ppm.d.png)
 
 
 Now some remarks on  -r "380A,0040;3802,78;3806,0603"  register changes.
@@ -189,4 +189,4 @@ You can create high quality animated .gif from .ogg video with ffmpeg based [gif
 	gifenc.sh $1.ogg $1.anim.gif
 
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
-![360fps sample video](out.360fps.25xSlower.2.anim.gif)
+![360fps sample video](res/out.360fps.25xSlower.2.anim.gif)
