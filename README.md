@@ -81,23 +81,32 @@ Format: "delta,index,timestamp\n"
 
 Timestamp distribution analysis can be easily done this way:
 
-	$ cat tstamps.txt | cut -f1 -d, | sort -n | uniq -c
+	$ cut -f1 -d, tstamps.csv | sort -n | uniq -c
 	      1 
-	     65 1650
-	    531 1651
-	      4 1652
-	      2 3302
+	     13 1499
+	     17 1500
+	     31 1501
+	    147 1502
+	    376 1503
+	     22 1504
+	     33 1505
+	     14 1506
+	      3 1507
+	      1 3005
+	      2 3006
 	$ 
 
-This shows that majority of frame deltas are 1651us, which corresponds to 1000000/1651=605.7fps.
-Two frame skips happened during recording, and their indices can be easily determined by:
 
-	$ grep "^3" tstamps.txt
-	3302,2,14461261624
-	3302,91,14461410205
-	$
+This shows that frame deltas are 1503&micro;s &plusmn; &micro;s, which corresponds to 1000000/1503=665.3fps.
+Three frame skips happened during recording, and their indices can be easily determined by:
 
-So we know that frames 0002-00090 have no frame skips.
+	$ grep "^3" tstamps.csv 
+	3006,2,6027843627
+	3005,85,6027969857
+	3006,554,6028676146
+	$ 
+
+So we know that frames 0085-0553 have no frame skips.
 
 
 	--empty,	-emp	Write empty output files
@@ -115,10 +124,10 @@ Using **/dev/shm** ramdisk for storage is essential for high frame rates. You pr
 This is an example making use of most high frame rate command line options:
 
 	$ rm /dev/shm/out.*.raw
-	$ raspiraw -md 7 -t 1000 -ts tstamps.csv -hd0 hd0.raw -h 64 --vinc 1F --fps 600 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
+	$ raspiraw -md 7 -t 1000 -ts tstamps.csv -hd0 hd0.raw -h 64 --vinc 1F --fps 660 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 	Using i2C device /dev/i2c-0
 	$ ls -l /dev/shm/out.*.raw | wc --lines
-	604
+	660
 	$
 
 This command captures video from ov5647 camera on CSI-2 interface:
@@ -129,7 +138,7 @@ This command captures video from ov5647 camera on CSI-2 interface:
 * sets frame capture height to 64 (-h 64)
 * doubles line scanning speed from 0x35 to 0x1F (--vinc 1F, sum 8 vs 16) 
 * increases line skipping to 1 and 15 instead of 3 and 5. Results in doubling vertical covered area (--vinc 1F, sum 8 vs 16). 1F shows colors (see below), 3D result is pale
-* asks for 600 fps (--fps 600)
+* asks for 660 fps (--fps 660)
 * sets some ov5647 registers (380A,0040;3802,78;3806,0603)
 * sets saverate to 1 (save all frames)
 * outputs in "/dev/shm" ramdisk files starting with "out.0001.raw"
