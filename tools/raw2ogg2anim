@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
+# index in gst-lauch-1.0 call below has to match with start of copy loop
 
 echo "copying /dev/shm/out.????.raw files"
 for((f=100; f<200; ++f))
@@ -36,7 +37,7 @@ done
 echo
 
 echo "now creating $1.ogg"
-gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=1 caps="image/png,framerate=\(fraction\)25/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
+gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=100 caps="image/png,framerate=\(fraction\)25/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
 echo "now creating $1.anim.gif"
 gifenc.sh $1.ogg $1.anim.gif
