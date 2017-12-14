@@ -792,10 +792,19 @@ int get_reg(struct mode_def *sensor_mode, int r)
 	return sensor_mode->regs[reg_index(sensor_mode, r)].data;
 }
 
-void set_reg(struct mode_def *sensor_mode, int r, int b)
-{
-	sensor_mode->regs[reg_index(sensor_mode, r)].data = b;
-}
+
+//The process first loads the cleaned up dump of the registers
+//than updates the known registers to the proper values
+//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
+enum operation {
+	EQUAL,	//Set bit to value
+	SET,	//Set bit
+	CLEAR,	//Clear bit
+	XOR	//Xor bit
+};
+
+void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
+
 
 int main(int argc, const char** argv) {
 	RASPIRAW_PARAMS_T cfg = {
@@ -891,7 +900,7 @@ int main(int argc, const char** argv) {
 				sscanf(q,"%2x",&b);	
 				vcos_log_error("%04x: %02x",r,b);    
 
-				set_reg(sensor_mode, r, b);
+				modReg(sensor_mode, r, 0, 7, b, EQUAL);
 
 				++r;
 				q+=2;
@@ -903,13 +912,13 @@ int main(int argc, const char** argv) {
 	if (cfg.hinc >= 0)
 	{
 		// TODO: handle modes different to ov5647 as well
-		set_reg(sensor_mode, 0x3814, cfg.hinc);
+		modReg(sensor_mode, 0x3814, 0, 7, cfg.hinc, EQUAL);
 	}
 
 	if (cfg.vinc >= 0)
 	{
 		// TODO: handle modes different to ov5647 as well
-		set_reg(sensor_mode, 0x3815, cfg.vinc);
+		modReg(sensor_mode, 0x3815, 0, 7, cfg.vinc, EQUAL);
 	}
 
 	if (cfg.fps > 0)
@@ -918,8 +927,8 @@ int main(int argc, const char** argv) {
 		int h = get_reg(sensor_mode, 0x380E);
 		int l = get_reg(sensor_mode, 0x380F);
                 int n = ((h<<8) + l) * sensor_mode->framerate / cfg.fps;
-		set_reg(sensor_mode, 0x380E, n>>8);
-		set_reg(sensor_mode, 0x380F, n&0xFF);
+		modReg(sensor_mode, 0x380E, 0, 7, n>>8, EQUAL);
+		modReg(sensor_mode, 0x380F, 0, 7, n&0xFF, EQUAL);
 	}
 
 	if (cfg.width > 0)
@@ -1383,16 +1392,6 @@ component_destroy:
 
 	return 0;
 }
-
-//The process first loads the cleaned up dump of the registers
-//than updates the known registers to the proper values
-//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
-enum operation {
-	EQUAL,	//Set bit to value
-	SET,	//Set bit
-	CLEAR,	//Clear bit
-	XOR	//Xor bit
-};
 
 void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum operation op)
 {
