@@ -60,14 +60,6 @@ Sets the width value of current mode.
 
 Sets the height value of current mode.
 
-	--vts,		-v	Set current mode min_vts
-
-Sets the min_vts value of current mode.
-
-	--line,		-l	Set current mode line_time_ns
-
-Sets the line_time_ns value of current mode.
-
 
 #### File output settings
 
@@ -141,7 +133,6 @@ This command captures video from ov5647 camera on CSI-2 interface:
 * stores &micro;s timestamps in file tstamps.csv (-ts)
 * stores BCRM header needed for **dcraw** only once in file hd0.raw  (-hd0)
 * sets frame capture height to 64 (-h 64)
-* doubles line scanning speed from 0x35 to 0x1F (--vinc 1F, sum 8 vs 16) 
 * increases line skipping to 1 and 15 instead of 3 and 5. Results in doubling vertical covered area (--vinc 1F, sum 8 vs 16). 1F shows colors (see below), 3D result is pale
 * asks for 660 fps (--fps 660)
 * sets some ov5647 registers (380A,0040;3802,78;3806,0603)
