@@ -156,7 +156,7 @@ For being able to convert frame 123 captured frame with **dcraw** these steps ar
 
 Since line scanning speed was doubled, the captured 128x64 frames need to be stretched by factor 2.
 You can use this small C code and know exactly what happens, or any other stretching program (gimp, netpbm tools, ...), the result is still a .ppm format file:
-[double.c](https://stamm-wilbrandt.de/en/forum/double.c)
+[double.c](tools/double.c)
 
 	double out.0123.ppm > out.0123.ppm.d
 
@@ -184,9 +184,11 @@ This gstreamer pipeline creates .ogg video. You can choose frame rate the video 
 
 #### Creation of animated .gif from .ogg video
 
-You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html). You only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
+You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](tools/gifenc.sh). You only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
 
 	gifenc.sh $1.ogg $1.anim.gif
 
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
 ![360fps sample video](res/out.360fps.25xSlower.2.anim.gif)
+
+[tools directory](tools/)
