@@ -105,7 +105,7 @@ Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byt
 
 	-f, --fps	: Set frame rate regs
 
-Sets the requested frame rate; argument is a floating point number. All sensors but adv7282m sensor are supported.
+Sets the requested frame rate; argument is a floating point number. All sensors but adv7282m sensor are supported. "WARNING ..." gets logged if frame rate is above sensor specified maximal value.
 
 #### Sensor mode setting options
 
