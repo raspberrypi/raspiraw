@@ -73,7 +73,7 @@ If selected, this prepeneds each stored frame with a 32KB header (needed for **d
 
 	-sr, --saverate	: Save every Nth frame
 
-Per default this is 20, allowing to capture frames to slow SD cards. In high framera section, storing on (fast) ramdisk allows to use "-sr 1" (store all frames).
+Per default this is 20, allowing to capture frames to slow SD cards. In high framerate section, storing on (fast) ramdisk allows to use "-sr 1" (store all frames).
 
 ...
 
@@ -105,8 +105,7 @@ Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byt
 
 	-f, --fps	: Set frame rate regs
 
-Sets the requested frame rate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
-
+Sets the requested frame rate; argument is a floating point number. All sensors but adv7282m sensor are supported.
 
 #### Sensor mode setting options
 
