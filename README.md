@@ -11,7 +11,7 @@ I2C communications).
 
 The raw Bayer format frames captured by **raspiraw** can be converted to .ppm images by modified **dcraw** image processing app: [https://github.com/6by9/dcraw](https://github.com/6by9/dcraw)
 
-Currently supported sensors:
+Supported sensors:
 
 	adv7282m
 	imx219
@@ -210,6 +210,7 @@ You can use this small C code and know exactly what happens, or any other stretc
 
 	double out.0123.ppm > out.0123.ppm.d
 
+This frame was captured with 665fps. It is surprisingly colorful despite only 1.5ms shutter time:
 ![600fps sample frame just described](res/out.0123.ppm.d.png)
 
 
@@ -242,3 +243,11 @@ Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 
 ![360fps sample video](res/out.360fps.25xSlower.2.anim.gif)
 
 [tools directory](tools/)
+
+## Where is the limit?
+
+Above sample did capture 640x128 frames at 665fps.
+It is possible to capture 640x64 stretched frames with 900fps!
+[https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776)
+![900fps sample frame just described](res/out.3000.ppm.d.png)
+
