@@ -16,6 +16,37 @@ The raw Bayer format frames captured by **raspiraw** can be converted to .ppm im
 
 ## raspiraw command line options 
 
+Table of contents:
+
+	$ raspiraw
+	
+	raspiraw Camera App 0.0.1
+	
+	-?, --help	: This help information
+	-md, --mode	: Set sensor mode <mode>
+	-hf, --hflip	: Set horizontal flip
+	-vf, --vflip	: Set vertical flip
+	-e, --ss	: Set the sensor exposure time (not calibrated units)
+	-g, --gain	: Set the sensor gain code (not calibrated units)
+	-o, --output	: Set the output filename
+	-hd, --header	: Write the BRCM header to the output file
+	-t, --timeout	: Time (in ms) before shutting down (if not specified, set to 5s)
+	-sr, --saverate	: Save every Nth frame
+	-b, --bitdepth	: Set output raw bit depth (8, 10, 12 or 16, if not specified, set to sensor native)
+	-c, --cameranum	: Set camera number to use (0=CAM0, 1=CAM1).
+	-eus, --expus	: Set the sensor exposure time in micro seconds.
+	-y, --i2c	: Set the I2C bus to use.
+	-r, --regs	: Change (current mode) regs
+	-hi, --hinc	: Set horizontal odd/even inc reg
+	-vi, --vinc	: Set vertical odd/even inc reg
+	-f, --fps	: Set framerate regs
+	-w, --width	: Set current mode width
+	-h, --height	: Set current mode height
+	-hd0, --header0	: Sets filename to write the BRCM header to
+	-ts, --tstamps	: Sets filename to write timestamps to
+	-emp, --empty	: Write empty output files
+	$
+
 ## base options
 
 	-?, --help	: This help information
