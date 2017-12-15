@@ -20,7 +20,7 @@ The raw Bayer format frames captured by **raspiraw** can be converted to .ppm im
 
 	-?, --help	: This help information
 
-
+&nbsp;
 
 	-md, --mode	: Set sensor mode <mode>
 
@@ -28,15 +28,19 @@ Range is 1-7.
 
 	-hf, --hflip	: Set horizontal flip
 
+&nbsp;
 
 	-vf, --vflip	: Set vertical flip
 
+&nbsp;
 
 	-e, --ss	: Set the sensor exposure time (not calibrated units)
 
+&nbsp;
 
 	-g, --gain	: Set the sensor gain code (not calibrated units)
 
+&nbsp;
 
 	-o, --output	: Set the output filename
 
@@ -49,6 +53,7 @@ If selected, this prepeneds each stored frame with a 32KB header (needed for **d
 
 	-t, --timeout	: Time (in ms) before shutting down (if not specified, set to 5s)
 
+&nbsp;
 
 	-sr, --saverate	: Save every Nth frame
 
@@ -56,12 +61,15 @@ Per default this is 20, allowing to capture frames to slow SD cards. In high fra
 
 	-b, --bitdepth	: Set output raw bit depth (8, 10, 12 or 16, if not specified, set to sensor native)
 
+&nbsp;
 
 	-c, --cameranum	: Set camera number to use (0=CAM0, 1=CAM1).
 
+&nbsp;
 
 	-eus, --expus	: Set the sensor exposure time in micro seconds.
 
+&nbsp;
 
 	-y, --i2c	: Set the I2C bus to use.
 
