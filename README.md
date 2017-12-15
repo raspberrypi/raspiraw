@@ -49,9 +49,7 @@ Table of contents:
 
 ## base options
 
-	-?, --help	: This help information
-
-&nbsp;
+...
 
 	-md, --mode	: Set sensor mode <mode>
 
@@ -59,19 +57,7 @@ Range is 1-7.
 
 	-hf, --hflip	: Set horizontal flip
 
-&nbsp;
-
-	-vf, --vflip	: Set vertical flip
-
-&nbsp;
-
-	-e, --ss	: Set the sensor exposure time (not calibrated units)
-
-&nbsp;
-
-	-g, --gain	: Set the sensor gain code (not calibrated units)
-
-&nbsp;
+...
 
 	-o, --output	: Set the output filename
 
@@ -80,27 +66,15 @@ Example: ... -o /dev/shm/out.%04d.raw ...
 
 	-hd, --header	: Write the BRCM header to the output file
 
-If selected, this prepeneds each stored frame with a 32KB header (needed for **dcraw** being able to process the raw frame).
+If selected, this prepeneds each stored frame with a 32KB header (needed for **dcraw** being able to process the raw frame). An alternative (needed for high framerate capturing) is option -hd0 (see below section), which allows **dcraw** to process the captured frames later as well.
 
-	-t, --timeout	: Time (in ms) before shutting down (if not specified, set to 5s)
-
-&nbsp;
+...
 
 	-sr, --saverate	: Save every Nth frame
 
 Per default this is 20, allowing to capture frames to slow SD cards. In high framera section, storing on (fast) ramdisk allows to use "-sr 1" (store all frames).
 
-	-b, --bitdepth	: Set output raw bit depth (8, 10, 12 or 16, if not specified, set to sensor native)
-
-&nbsp;
-
-	-c, --cameranum	: Set camera number to use (0=CAM0, 1=CAM1).
-
-&nbsp;
-
-	-eus, --expus	: Set the sensor exposure time in micro seconds.
-
-&nbsp;
+...
 
 	-y, --i2c	: Set the I2C bus to use.
 
