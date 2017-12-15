@@ -14,36 +14,82 @@ The raw Bayer format frames captured by **raspiraw** can be converted to .ppm im
 [https://github.com/6by9/dcraw](https://github.com/6by9/dcraw)
 
 
-## Common Command line Options 
+## raspiraw command line options 
 
-Execute raspiraw to get command help:
+## base options
 
-	raspiraw
+	-?, --help	: This help information
 
-TODO: add description of uncovered options. 
 
-## raspiraw high frame rate options
+
+	-md, --mode	: Set sensor mode <mode>
+
+Range is 1-7.
+
+	-hf, --hflip	: Set horizontal flip
+
+
+	-vf, --vflip	: Set vertical flip
+
+
+	-e, --ss	: Set the sensor exposure time (not calibrated units)
+
+
+	-g, --gain	: Set the sensor gain code (not calibrated units)
+
+
+	-o, --output	: Set the output filename
+
+For recording more than one frame specify "C printf integer format strings" as part of the filename.
+Example: ... -o /dev/shm/out.%04d.raw ...
+
+	-hd, --header	: Write the BRCM header to the output file
+
+If selected, this prepeneds each stored frame with a 32KB header (needed for **dcraw** being able to process the raw frame).
+
+	-t, --timeout	: Time (in ms) before shutting down (if not specified, set to 5s)
+
+
+	-sr, --saverate	: Save every Nth frame
+
+Per default this is 20, allowing to capture frames to slow SD cards. In high framera section, storing on (fast) ramdisk allows to use "-sr 1" (store all frames).
+
+	-b, --bitdepth	: Set output raw bit depth (8, 10, 12 or 16, if not specified, set to sensor native)
+
+
+	-c, --cameranum	: Set camera number to use (0=CAM0, 1=CAM1).
+
+
+	-eus, --expus	: Set the sensor exposure time in micro seconds.
+
+
+	-y, --i2c	: Set the I2C bus to use.
+
+Range is 0-2.
+
+
+## high frame rate options
 
 Lookup ov5647, imx219 or adv7282m data sheets for register details.
 
 #### I2C register setting options
 
-	--regs,		-r	Change (current mode) regs
+	-r, --regs	: Change (current mode) regs
 
 Allows to change sensor regs in selected sensor mode. Format is a semicolon separated string of assignments.
 An assignment consists of a 4 hex digits register address, followed by a comma and one or more 2 hex digit byte values.
 Restriction: Only registers present in selected sensor mode can be modified. Example argument: "380A,003C;3802,78;3806,05FB".
 In case more than one byte appears after the comma, the byte values get written to next addresses.
 
-	--hinc,		-hi	Set horizontal odd/even inc reg
+	-hi, --hinc	: Set horizontal odd/even inc reg
 
 Sets the horizontal odd and even increment numbers. Argument is a 2 hex digits byte. "-hi xy" is convenience shortcut for "3814,xy" in --regs for ov5647 sensor. Lookup the sensor mode registers for your sensor header file for default values. TODO: Needs to be extended to deal with the other sensors as well.
 
-	--vinc,		-vi	Set vertical odd/even inc reg
+	-vi, --vinc	: Set vertical odd/even inc reg
 
 Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byte. "-vi xy" is convenience shortcut for "3815,xy" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
-	--fps,		-f	Set frame rate regs
+	-f, --fps	: Set frame rate regs
 
 Sets the requested frame rate. Argument is a floating point number. This is convenience shortcut for computing hh/ll values and "380E,hhll" in --regs for ov5647 sensor. TODO: Needs to be extended to deal with the other sensors as well.
 
@@ -52,25 +98,25 @@ Sets the requested frame rate. Argument is a floating point number. This is conv
 
 The following options allow to overwrite some sensor mode settings for current sensor mode.
 
-	--width,	-w	Set current mode width
+	-w, --width	: Set current mode width
 
 Sets the width value of current mode.
 
-	--height,	-h	Set current mode height
+	-h, --height	: Set current mode height
 
 Sets the height value of current mode.
 
 
 #### File output settings
 
-	--header0,	-hd0	Write the BRCM header to output file
+	-hd0, --header0	: Write the BRCM header to output file
 
 For high frame rate modes writing BRCM header to each file is a bottleneck.
 So this option is a replacement for "--header"/"-hd" option.
 Instead of writing header to each frame file, it is written to specified output file only.
 For decoding ith frame with **dcraw** later, you need to concatenate specified output file and frame i and store somewhere, then **dcraw** that file.
 
-	--tstamps,	-ts	Write timestamps to output file
+	-ts, --tstamps	: Write timestamps to output file
 
 With this option timestamps for the captured frames get written to specified output file.
 This happens after video has been captured, so does not negatively affect capture frame rate.
@@ -106,7 +152,7 @@ Three frame skips happened during recording, and their indices can be easily det
 So we know that frames 0085-0553 have no frame skips.
 
 
-	--empty,	-emp	Write empty output files
+	-emp, --empty	: Write empty output files
 
 This option allows to determine the maximal frame rate **raspiraw** callback will be triggered. Only empty files will be written for the frames, but the filenames allow to count how many. This would be an example use:
 
