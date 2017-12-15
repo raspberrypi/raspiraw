@@ -9,10 +9,13 @@ reverse engineered how the firmware is working (eg by listening to the
 I2C communications).
 
 
-The raw Bayer format frames captured by **raspiraw** can be converted to .ppm images by modified **dcraw** image processing app:
+The raw Bayer format frames captured by **raspiraw** can be converted to .ppm images by modified **dcraw** image processing app: [https://github.com/6by9/dcraw](https://github.com/6by9/dcraw)
 
-[https://github.com/6by9/dcraw](https://github.com/6by9/dcraw)
+Currently supported sensors:
 
+	adv7282m
+	imx219
+	ov5647
 
 ## raspiraw command line options 
 
@@ -54,8 +57,6 @@ Table of contents:
 	-md, --mode	: Set sensor mode <mode>
 
 Range is 1-7.
-
-	-hf, --hflip	: Set horizontal flip
 
 ...
 
