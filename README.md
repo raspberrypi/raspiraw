@@ -252,4 +252,4 @@ It is possible to capture 640x64 stretched frames with 900fps!
 ![900fps sample frame just described](res/out.3000.ppm.d.png)
 
 Sharp and well lighted video can be taken with NoIR camera with lense and 3W IR LED. This is 640x128 frame from video taken with 665fps:
-![665fps NoIR camera with lense sample frame](resout.1000.ppm.d.png)
+![665fps NoIR camera with lense sample frame](res/out.1000.ppm.d.png)
