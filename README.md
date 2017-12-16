@@ -251,3 +251,5 @@ It is possible to capture 640x64 stretched frames with 900fps!
 [https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776)
 ![900fps sample frame just described](res/out.3000.ppm.d.png)
 
+Sharp and well lighted video can be taken with NoIR camera with lense and 3W IR LED. This is 640x128 frame from video taken with 665fps:
+![665fps NoIR camera with lense sample frame](resout.1000.ppm.d.png)
