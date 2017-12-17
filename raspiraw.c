@@ -28,8 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define VERSION_STRING "0.0.1"
 
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -505,7 +507,7 @@ uint32_t order_and_bit_depth_to_encoding(enum bayer_order order, int bit_depth)
  * @param state Pointer to state structure to assign any discovered parameters to
  * @return non-0 if failed for some reason, 0 otherwise
  */
-static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
+static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 {
 	// Parse the command line arguments.
 	// We are looking for --<something> or -<abbreviation of something>
@@ -752,22 +754,6 @@ static int parse_cmdline(int argc, const char **argv, RASPIRAW_PARAMS_T *cfg)
 	return 0;
 }
 
-int reg_index(struct mode_def *sensor_mode, int r)
-{
-	int i;
-	for(i=sensor_mode->num_regs-1; i>=0; --i)
-	{
-		if (sensor_mode->regs[i].reg == r)
-			break;
-	}
-	if (i<0)
-	{
-		vcos_log_error("register %04x not found - aborting", r);
-		exit(-2);
-	}
-	return i;
-}
-
 //The process first loads the cleaned up dump of the registers
 //than updates the known registers to the proper values
 //based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
@@ -781,7 +767,7 @@ enum operation {
 void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
 
 
-int main(int argc, const char** argv) {
+int main(int argc, char** argv) {
 	RASPIRAW_PARAMS_T cfg = {
 		.mode = 0,
 		.hflip = 0,
