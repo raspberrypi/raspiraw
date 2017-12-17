@@ -266,18 +266,18 @@ Execute camera_i2c to make raspiraw work.
 
 #### raspiraw usage
 
-There are quite soome tool in [tools directory](tools/).
+There are quite soome tools in [tools directory](tools/).
 They allow to do a video capture with frame delay and frame skip analysis with just a single command.
 And to repeat the command if you do not like the analysis.
 
 There are 7 tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing only 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. For stretched 640x128 can be capture at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps. 
-fps. 
 
 This table gives framerates possible, the (90) can be achieved with "raspivid -md 7 -fps 90 ..." without raspiraw.
 
 |format        | Pi Zero [W] |   Pi 2B/3B |
 |:-------------|------------:|-----------:|
-|640x480  / _s | (90) / 180  | (90) / 180 |
+|640x480  / _s | (90)        | (90)       |
+|640x416_s     |        210  |        130 |
 |640x240  / _s |  180 / 360  |  180 / 360 |
 |640x128  / _s |  350 / 502  |  350 / 665 |
 |640x64   / _s |  502 / 543  |  665 / 750 |
@@ -300,7 +300,7 @@ Sample:
 	$
 
 [raw2ogg2anim ](tools/raw2ogg2anim) is script allowing you to create a .ogg video and an animated .gif.
-Specify output file prefix for .ogg video and .anim.gif animated gif created. The specify frame start and stop index as well, and the target framerate. Optionally you can add "d" argument for stretching each frame by factor of 2 vertically before generation of output.
+Specify output file prefix for .ogg video and .anim.gif animated gif created. Then specify frame start and stop index as well, and the target framerate. Optionally you can add "d" argument for stretching each frame by factor of 2 vertically before generation of output.
 
 	$ ~/raspiraw/tools/raw2ogg2anim
 	format: raw2ogg2anim vname first last fps [d]
@@ -308,7 +308,7 @@ Specify output file prefix for .ogg video and .anim.gif animated gif created. Th
 
 ## Where is the limit?
 
-Above sample did capture 640x128 frames at 665fps. It is possible to capture 640x64 stretched frames with 900fps!
+Above sample did capture 640x128 frames (stretched) at 665fps. It is possible to capture 640x64 stretched frames with 900fps!
 [https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776)
 
 ![900fps sample frame just described](res/out.3000.ppm.d.png)
