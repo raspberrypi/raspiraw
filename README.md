@@ -264,23 +264,25 @@ Execute camera_i2c to make raspiraw work.
 	$
 
 
-#### raspiraw usage
+#### tools usage
 
 There are quite soome tools in [tools directory](tools/).
 They allow to do a video capture with frame delay and frame skip analysis with just a single command.
 And to repeat the command if you do not like the analysis.
 
-There are 7 tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing only 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. For stretched 640x128 can be capture at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps. 
+There are 7 tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. Stretched 640x128 frames can be captured at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps. 
 
 This table gives framerates possible, the (90) can be achieved with "raspivid -md 7 -fps 90 ..." without raspiraw.
 
 |format        | Pi Zero [W] |   Pi 2B/3B |
 |:-------------|------------:|-----------:|
-|640x480  / _s | (90)        | (90)       |
-|640x416_s     |        210  |        130 |
+|640x480       | (90)        | (90)       |
+|640x416_s     |        210  |        210 |
+|640x400_s     |        220  |        220 |
 |640x240  / _s |  180 / 360  |  180 / 360 |
 |640x128  / _s |  350 / 502  |  350 / 665 |
 |640x64   / _s |  502 / 543  |  665 / 750 |
+|640x32        |  543        |  750       |
 framerate for normal / stretched
 
 Sample:
