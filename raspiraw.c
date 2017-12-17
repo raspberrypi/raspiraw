@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
-int asprintf(char **strp, const char *fmt, ...);
 #include <stdlib.h>
 #include <string.h>
 
@@ -54,8 +53,6 @@ int asprintf(char **strp, const char *fmt, ...);
 #include <sys/ioctl.h>
 
 #include "raw_header.h"
-
-#include <libgen.h>
 
 #define DEFAULT_I2C_DEVICE 0
 
@@ -821,9 +818,7 @@ int main(int argc, const char** argv) {
 
 	if (argc == 1)
 	{
-		char *buf = malloc(strlen(argv[0])+1);
-		strcpy(buf, argv[0]);
-		fprintf(stdout, "\n%s Camera App %s\n\n", basename(buf), VERSION_STRING);
+		fprintf(stdout, "\n%s Camera App %s\n\n", basename(argv[0]), VERSION_STRING);
 
 		raspicli_display_help(cmdline_commands, cmdline_commands_size);
 		exit(-1);
