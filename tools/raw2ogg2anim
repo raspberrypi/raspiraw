@@ -3,17 +3,22 @@
 # needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
 # index in gst-lauch-1.0 call below has to match with start of copy loop
 
+if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d]"; exit; fi
+
+echo "removing old auxiliary files"
+rm -f out.*.raw out.*.ppm out.*.ppm.d out.*.ppm.d.png
+
 echo "copying /dev/shm/out.????.raw files"
-for((f=100; f<200; ++f))
+for((f=$2; f<=$3; ++f))
 do
-  # cp /dev/shm/out.0$f.raw .
-  cat hd0.raw /dev/shm/out.0$f.raw > out.0$f.raw
+  # cp /dev/shm/out.$(printf "%04d" $f).raw .
+  cat hd0.32k /dev/shm/out.$(printf "%04d" $f).raw >out.$(printf "%04d" $f).raw
   echo -en "$f     \r"
 done
 echo
 
 echo "dcraw each .raw file (to .ppm)"
-for f in *.raw
+for f in out.*.raw
 do
   dcraw $f
   echo -en "$f     \r"
@@ -21,15 +26,19 @@ done
 echo
 
 echo ".ppm -> .ppm.d"
-for f in *.ppm
+for f in out.*.ppm
 do
-  double $f > $f.d 
+  if [ "$5" = "" ]; then
+    ln -s $f $f.d 
+  else
+    double $f > $f.d 
+  fi
   echo -en "$f     \r"
 done
 echo
 
 echo ".ppm.d -> .ppm.d.png"
-for f in *.ppm.d
+for f in out.*.ppm.d
 do
   pnmtopng $f > $f.png 
   echo -en "$f     \r"
@@ -37,7 +46,7 @@ done
 echo
 
 echo "now creating $1.ogg"
-gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=100 caps="image/png,framerate=\(fraction\)25/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
+gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=$2 caps="image/png,framerate=\(fraction\)$4/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
 echo "now creating $1.anim.gif"
 gifenc.sh $1.ogg $1.anim.gif

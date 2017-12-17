@@ -180,7 +180,7 @@ Using **/dev/shm** ramdisk for storage is essential for high frame rates. You pr
 This is an example making use of most high frame rate command line options:
 
 	$ rm /dev/shm/out.*.raw
-	$ raspiraw -md 7 -t 1000 -ts tstamps.csv -hd0 hd0.raw -h 64 --vinc 1F --fps 660 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
+	$ raspiraw -md 7 -t 1000 -ts tstamps.csv -hd0 hd0.32k -h 64 --vinc 1F --fps 660 -r "380A,0040;3802,78;3806,0603" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null
 	Using i2C device /dev/i2c-0
 	$ ls -l /dev/shm/out.*.raw | wc --lines
 	660
@@ -190,7 +190,7 @@ This command captures video from ov5647 camera on CSI-2 interface:
 * based on 640x480 mode (-md 7)
 * captures for 1s (-t 1000)
 * stores &micro;s timestamps in file tstamps.csv (-ts)
-* stores BCRM header needed for **dcraw** only once in file hd0.raw  (-hd0)
+* stores BCRM header needed for **dcraw** only once in file hd0.32k  (-hd0)
 * sets frame capture height to 64 (-h 64)
 * increases line skipping to 1 and 15 instead of 3 and 5. Results in doubling vertical covered area (--vinc 1F, sum 8 vs 16). 1F shows colors (see below), 3D result is pale
 * asks for 660 fps (--fps 660)
@@ -201,7 +201,7 @@ This command captures video from ov5647 camera on CSI-2 interface:
 
 For being able to convert frame 123 captured frame with **dcraw** these steps are necessary (because of -hd0):
 
-	cat hd0.raw /dev/shm/out.0123.raw > out.0123.raw
+	cat hd0.32k /dev/shm/out.0123.raw > out.0123.raw
 	dcraw out.0123.raw
 
 Since line scanning speed was doubled, the captured 128x64 frames need to be stretched by factor 2.
@@ -242,12 +242,73 @@ You can create high quality animated .gif from .ogg video with ffmpeg based [gif
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
 ![360fps sample video](res/out.360fps.25xSlower.2.anim.gif)
 
-[tools directory](tools/)
+## raspiraw usage
+
+#### do once
+
+You have to clone the repo.
+Then "cd raspiraw; ./buildme".
+Finally add this line to your ~/.bashrc.
+
+	$ tail -1 ~/.bashrc 
+	PATH=~/raspiraw:~/raspiraw/tools:$PATH
+	$
+
+#### do once after reboot or use of raspistill/raspivid
+
+Execute camera_i2c to make raspiraw work.
+
+	$ camera_i2c 
+	setting GPIO for board revsion: a01041
+	A+, B+, and B2 all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power
+	$
+
+
+#### raspiraw usage
+
+There are quite soome tool in [tools directory](tools/).
+They allow to do a video capture with frame delay and frame skip analysis with just a single command.
+And to repeat the command if you do not like the analysis.
+
+There are 7 tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing only 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. For stretched 640x128 can be capture at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps. 
+fps. 
+
+This table gives framerates possible, the (90) can be achieved with "raspivid -md 7 -fps 90 ..." without raspiraw.
+
+|format        | Pi Zero [W] |   Pi 2B/3B |
+|:-------------|------------:|-----------:|
+|640x480  / _s | (90) / 180  | (90) / 180 |
+|640x240  / _s |  180 / 360  |  180 / 360 |
+|640x128  / _s |  350 / 502  |  350 / 665 |
+|640x64   / _s |  502 / 543  |  665 / 750 |
+framerate for normal / stretched
+
+Sample:
+
+	$ 640x128_s 1200
+	removing /dev/shm/out.*.raw
+	capturing frames for 1200ms with 659fps requested
+	794 frames were captured at 665fps
+	frame delta time[us] distribution
+	      1 
+	    168 1502
+	    623 1503
+	      2 3006
+	after skip frame indices (middle column)
+	3006,2,9698007408
+	3006,275,9698419172
+	$
+
+[raw2ogg2anim ](tools/raw2ogg2anim) is script allowing you to create a .ogg video and an animated .gif.
+Specify output file prefix for .ogg video and .anim.gif animated gif created. The specify frame start and stop index as well, and the target framerate. Optionally you can add "d" argument for stretching each frame by factor of 2 vertically before generation of output.
+
+	$ ~/raspiraw/tools/raw2ogg2anim
+	format: raw2ogg2anim vname first last fps [d]
+	$ 
 
 ## Where is the limit?
 
-Above sample did capture 640x128 frames at 665fps.
-It is possible to capture 640x64 stretched frames with 900fps!
+Above sample did capture 640x128 frames at 665fps. It is possible to capture 640x64 stretched frames with 900fps!
 [https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=109523&p=1246776#p1246776)
 
 ![900fps sample frame just described](res/out.3000.ppm.d.png)
