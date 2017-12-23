@@ -6,8 +6,8 @@ echo "removing /dev/shm/out.*.raw"
 rm -f /dev/shm/out.*.raw
 
 fps=210
-echo "capturing frames for ${t}ms with $fps requested"
-raspiraw -md 7 -t $1 -ts tstamps.csv -hd0 hd0.32k -h 208 --vinc 1F --fps $fps -r "380A,00D0;3802,78;3806,068F" -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
+echo "capturing frames for ${1}ms with ${fps}fps requested"
+raspiraw -md 7 -t $1 -ts tstamps.csv -hd0 hd0.32k --height 208 --top 0 --vinc 1F --fps $fps -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
 
 us=`cut -f1 -d, tstamps.csv | sort -n | uniq -c | sort -n | tail -1 | cut -b9-`
 l=`ls -l /dev/shm/out.*.raw | wc --lines`

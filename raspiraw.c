@@ -162,6 +162,7 @@ enum {
 	CommandFps,
 	CommandWidth,
 	CommandHeight,
+	CommandTop,
 	CommandVts,
 	CommandLine,
 	CommandWriteHeader0,
@@ -191,6 +192,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandFps,		"-fps",		"f",  "Set framerate regs", -1},
 	{ CommandWidth,		"-width",	"w",  "Set current mode width", -1},
 	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
+	{ CommandTop,		"-top",		"tp", "Set current mode top", -1},
 	{ CommandWriteHeader0,	"-header0",	"hd0","Sets filename to write the BRCM header to", 0 },
 	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
@@ -225,6 +227,7 @@ typedef struct {
 	double fps;
 	int width;
 	int height;
+	int top;
 	char *write_header0;
 	char *write_timestamps;
 	int write_empty;
@@ -717,6 +720,13 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandTop:
+				if (sscanf(argv[i + 1], "%d", &cfg->top) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
 			case CommandWriteHeader0:
 				len = strlen(argv[i + 1]);
 				cfg->write_header0 = malloc(len + 1);
@@ -789,6 +799,7 @@ int main(int argc, char** argv) {
 		.fps = -1,
 		.width = -1,
 		.height = -1,
+		.top = -1,
 		.write_header0 = NULL,
 		.write_timestamps = NULL,
 		.write_empty = 0,
@@ -901,6 +912,17 @@ int main(int argc, char** argv) {
 	if (cfg.height > 0)
 	{
 		sensor_mode->height = cfg.height;
+		// TODO: handle modes different to ov5647 as well
+		modReg(sensor_mode, 0x380A, 0, 3, cfg.height >>8, EQUAL);
+		modReg(sensor_mode, 0x380B, 0, 7, cfg.height &0xFF, EQUAL);
+	}
+
+	if (cfg.top > 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		int val = cfg.top * (cfg.mode < 2 ? 1 : 1 << (cfg.mode / 2 - 1));
+		modReg(sensor_mode, 0x3802, 0, 3, val >>8, EQUAL);
+		modReg(sensor_mode, 0x3803, 0, 7, val &0xFF, EQUAL);
 	}
 
 
