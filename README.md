@@ -277,6 +277,7 @@ This table gives modes and framerates possible with raspiraw.
 |format        | Pi Zero [W] |   Pi 2B/3B |
 |:-------------|------------:|-----------:|
 |640x480       |         90  |         90 |
+|640x480_s     |        180  |        180 |
 |640x240[_B]   |        180  |        180 |
 |640x240[_B]_s |        360  |        360 |
 |640x128  / _s |  350 / 502  |  350 / 665 |
