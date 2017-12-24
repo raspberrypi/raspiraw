@@ -285,7 +285,7 @@ This table gives modes and framerates possible with raspiraw.
 |640x32        |  543        |  750       |
 |640x416_s     |        210  |        210 |
 |640x400_s     |        220  |        220 |
-framerate for normal / stretched
+|framerate for normal / stretched | _B is "bottom half"
 
 Sample:
 
