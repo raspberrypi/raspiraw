@@ -45,6 +45,7 @@ Table of contents:
 	-f, --fps	: Set framerate regs
 	-w, --width	: Set current mode width
 	-h, --height	: Set current mode height
+	-tp, --top	: Set current mode top
 	-hd0, --header0	: Sets filename to write the BRCM header to
 	-ts, --tstamps	: Sets filename to write timestamps to
 	-emp, --empty	: Write empty output files
@@ -105,7 +106,7 @@ Sets the vertical odd and even increment numbers. Argument is a 2 hex digits byt
 
 	-f, --fps	: Set frame rate regs
 
-Sets the requested frame rate; argument is a floating point number. All sensors but adv7282m sensor are supported. "WARNING ..." gets logged if frame rate is above sensor specified maximal value.
+Sets the requested frame rate; argument is a floating point number. All sensors but adv7282m sensor are supported.
 
 #### Sensor mode setting options
 
@@ -117,7 +118,11 @@ Sets the width value of current mode.
 
 	-h, --height	: Set current mode height
 
-Sets the height value of current mode.
+Sets the height value of current mode, and sensor mode regs.
+
+	-tp, --top	: Set current mode top
+
+Sets top line in case --vinc setting jumps two or more lines. The tools *_B* modes make use of it to capture bottom half of fov.
 
 
 #### File output settings
@@ -162,7 +167,7 @@ Three frame skips happened during recording, and their indices can be easily det
 	3006,554,6028676146
 	$
 
-So we know that frames 0085-0553 have no frame skips.
+So we know that frames 0085-0553 have no frame skips. All tools do this timestamp analysis for you.
 
 
 	-emp, --empty	: Write empty output files
@@ -214,13 +219,7 @@ This frame was captured with 665fps. It is surprisingly colorful despite only 1.
 ![600fps sample frame just described](res/out.0123.ppm.d.png)
 
 
-Now some remarks on  -r "380A,0040;3802,78;3806,0603"  register changes.
-
-In above command we changed sensor mode height to 64 via "-h 64". This is reflected by "0040" stored in in DVP output vertical height registers 380A+380B.
-
-Looking up register difference between mode4 (1296x960) and mode5 (1296x720) it can be seen that y_addr_end register (3806+3807) difference (0x07A3 versus 0x06B3) is 0xF0=240. This is the reduction in vertical resulution between both modes. For being based on mode7 the higher value is 0x07A3=1955. Keeping 64 lines from 480 means reduction by 480-64=0x01A0 from 0x07A3, which is 0x0603.
-
-For this to work 78 is needed in register 3802 according diff between mode4 and mode5. 3802 top 4 bits are debug mode (7), while  lower 4 bits are bits [11:8] of y_addr_start. Register 3803 value for bits [7:0] of y_addr_start is 0x00. Not sure what 0x0800=2048 means since that is above vertical sensor row size. But that setting makes it work.
+Currently the capturing tools do not use --regs option anymore. This option keeps available trying out things quickly.
 
 
 #### Creation of .ogg video from **dcraw** processed and stretched .ppm frames
@@ -233,6 +232,8 @@ This gstreamer pipeline creates .ogg video. You can choose frame rate the video 
 
 	gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=300 caps="image/png,framerate=\(fraction\)1/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
+This is now part of raw2ogg2anim tool.
+
 #### Creation of animated .gif from .ogg video
 
 You can create high quality animated .gif from .ogg video with ffmpeg based [gifenc.sh](tools/gifenc.sh). You only need to adjust **fps** and **scale** in **filters** variable of that script to match what you want.
@@ -241,6 +242,8 @@ You can create high quality animated .gif from .ogg video with ffmpeg based [gif
 
 Sample: 360fps 640x120 (rescaled to 640x240) video taken with v1 camera, played 25x slowed down:
 ![360fps sample video](res/out.360fps.25xSlower.2.anim.gif)
+
+This is now part of raw2ogg2anim tool.
 
 ## raspiraw usage
 
@@ -270,7 +273,7 @@ There are quite soome tools in [tools directory](tools/).
 They allow to do a video capture with frame delay and frame skip analysis with just a single command.
 And to repeat the command if you do not like the analysis.
 
-There are 7 tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. Stretched 640x128 frames can be captured at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps.
+There are several tools for capturing. [640x128_s](tools/640x128_s) creates 640x128 frames while only capturing 64 lines. Stretching is needed in post processing. [640x128](tools/640x128) captures 640x128 frames as well, but all 128 lines. There is a minor difference in viewing the frames, and a bigger difference in capturing framerate that can be achieved. Stretched 640x128 frames can be captured at 665(502) fps on Pi 2B/3B(Pi Zero[W]), whereas full capturing of 128 lines allows for 350fps (only).
 
 This table gives modes and framerates possible with raspiraw.
 
@@ -285,6 +288,8 @@ This table gives modes and framerates possible with raspiraw.
 |640x32        |  543        |  750       |
 |640x416_s     |        210  |        210 |
 |640x400_s     |        220  |        220 |
+|1296x730_s    |         98  |         98 |
+|2592x1944_s   |         30  |         30 |
 |framerate for normal / stretched | _B is "bottom half"
 
 Sample:
@@ -303,7 +308,7 @@ Sample:
 	3006,275,9698419172
 	$
 
-[raw2ogg2anim ](tools/raw2ogg2anim) is script allowing you to create a .ogg video and an animated .gif.
+[raw2ogg2anim ](tools/raw2ogg2anim) is script allowing you to create an .ogg video and an animated .gif.
 Specify output file prefix for .ogg video and .anim.gif animated gif created. Then specify frame start and stop index as well, and the target framerate. Optionally you can add "d" argument for stretching each frame by factor of 2 vertically before generation of output.
 
 	$ ~/raspiraw/tools/raw2ogg2anim
@@ -317,6 +322,6 @@ Above sample did capture 640x128 frames (stretched) at 665fps. It is possible to
 
 ![900fps sample frame just described](res/out.3000.ppm.d.png)
 
-Sharp and well lighted video can be taken with NoIR camera with lense and 3W infrared LED. This is 640x128 frame from video taken with 665fps:
+Sharp and well lighted video can be taken with NoIR camera with lense and 3W infrared LED. This is 640x128 frame from video taken at 665fps:
 
 ![665fps NoIR camera with lense sample frame](res/out.1000.ppm.d.png)
