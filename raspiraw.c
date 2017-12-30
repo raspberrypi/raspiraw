@@ -894,11 +894,7 @@ int main(int argc, char** argv) {
 	if (cfg.fps > 0)
 	{
                 int n = 1000000000 / (sensor_mode->line_time_ns * cfg.fps);
-		if (n < sensor_mode->min_vts)
-		{
-			vcos_log_error("WARNING: computed VTS %d smaller than min_vts %d !", 
-					n, sensor_mode->min_vts);    
-		}
+		// (n < sensor_mode->min_vts) is allowed in case of vinc jumping 2 or 3 lines
 		// ov5647 vts_reg_numbits is 10, imx vts_reg_numbits 16, so this is fine
 		modReg(sensor_mode, sensor->vts_reg+0, 0, 7, n>>8, EQUAL);
 		modReg(sensor_mode, sensor->vts_reg+1, 0, 7, n&0xFF, EQUAL);
