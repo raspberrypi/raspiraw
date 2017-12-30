@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ "$1" = "" ]; then echo "format: `basename $0` ms"; exit; fi
+
+echo "removing /dev/shm/out.*.raw"
+rm -f /dev/shm/out.*.raw
+
+fps=190
+echo "capturing frames for ${1}ms with ${fps}fps requested"
+raspiraw -md 5 -t $1 -ts tstamps.csv -hd0 hd0.32k --height 180 --top 0 --vinc F1 --fps $fps -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
+
+us=`cut -f1 -d, tstamps.csv | sort -n | uniq -c | sort -n | tail -1 | cut -b9-`
+l=`ls -l /dev/shm/out.*.raw | wc --lines`
+echo "$l frames were captured at $((1000000 / $us))fps"
+
+echo "frame delta time[us] distribution"
+cut -f1 -d, tstamps.csv | sort -n | uniq -c
+
+echo "after skip frame indices (middle column)"
+grep "^[1-46-9]" tstamps.csv
+
+skips=`grep "^[1-46-9]" tstamps.csv | wc --lines | cut -f1 -d\ `
+stamps=`wc --lines tstamps.csv | cut -f1 -d\ `
+per=`expr \( 100 \* $skips \) / \( $skips + $stamps \)`
+echo "$per% frame skips"
