@@ -288,9 +288,10 @@ This table gives modes and framerates possible with raspiraw.
 |640x32        |  543        |  750       |
 |640x416_s     |        210  |        210 |
 |640x400_s     |        220  |        220 |
-|1296x730_s    |         98  |         98 |
 |2592x1944_s   |         30  |         30 |
-|framerate for normal / stretched | _B is "bottom half"
+|1296x730_s    |         98  |         98 |
+|1296x720_S    |        190  |        190 |
+|framerate for normal / stretched | _B is "bottom half" | _S is "4th rows"
 
 Sample:
 
@@ -309,10 +310,10 @@ Sample:
 	$
 
 [raw2ogg2anim ](tools/raw2ogg2anim) is script allowing you to create an .ogg video and an animated .gif.
-Specify output file prefix for .ogg video and .anim.gif animated gif created. Then specify frame start and stop index as well, and the target framerate. Optionally you can add "d" argument for stretching each frame by factor of 2 vertically before generation of output.
+Specify output file prefix for .ogg video and .anim.gif animated gif created. Then specify frame start and stop index as well, and the target framerate. Optionally you can add "d"/"dd" argument for stretching each frame by factor of 2/4 vertically before generation of output. "d"/"dd" option is used by "_s"/"_S" mode tools.
 
 	$ ~/raspiraw/tools/raw2ogg2anim
-	format: raw2ogg2anim vname first last fps [d]
+	format: raw2ogg2anim vname first last fps [d[d]]
 	$ 
 
 ## Where is the limit?
@@ -325,3 +326,6 @@ Above sample did capture 640x128 frames (stretched) at 665fps. It is possible to
 Sharp and well lighted video can be taken with NoIR camera with lense and 3W infrared LED. This is 640x128 frame from video taken at 665fps:
 
 ![665fps NoIR camera with lense sample frame](res/out.1000.ppm.d.png)
+
+This is 1296x720_S format frame taken at 190fps, only every 4th row gets captured (allowing for high framerate while keeping fov), and post processing has to call "double" tool two times for each frame:
+![1296x720_S mode sample frame](res/Screenshot179.png)

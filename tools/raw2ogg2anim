@@ -2,7 +2,7 @@
 
 # needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
 
-if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d]"; exit; fi
+if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d[d]]"; exit; fi
 
 echo "removing old auxiliary files"
 rm -f out.*.raw out.*.ppm out.*.ppm.d out.*.ppm.d.png
@@ -30,7 +30,12 @@ do
   if [ "$5" = "" ]; then
     ln -s $f $f.d 
   else
-    double $f > $f.d
+    if [ "$5" = "d" ]; then
+      double $f > $f.d
+    else
+      double $f > $f.D
+      double $f.D > $f.d
+    fi
   fi
   echo -en "$f     \r"
 done
