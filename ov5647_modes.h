@@ -574,12 +574,17 @@ struct sensor_regs ov5647_mode5[] =
       addreg(0x3B07, 0x0C),
       addreg(0x3800, 0x00),
       addreg(0x3801, 0x00),
-      addreg(0x3802, 0x78),
+      //NB This value IS INCORRECT, but has been incorrect for long enough
+      //that changing it will cause complaints due to changing FOV.
+      //(It should be (0x3802, 00), (0x3803, F0) to give a symmetric crop).
+      //Correct the value so debug_mode isn't set, but the result is the same.
+      addreg(0x3802, 0x00),
       addreg(0x3803, 0x00),
       addreg(0x3804, 0x0A),
       addreg(0x3805, 0x3F),
-      addreg(0x3806, 0x06),
-      addreg(0x3807, 0xB3),
+      //For a symmetric crop, use (0x3806, 0x06), (0x3807,0xB3)
+      addreg(0x3806, 0x05),
+      addreg(0x3807, 0xbf),
       addreg(0x3808, 0x05),
       addreg(0x3809, 0x10),
       addreg(0x380A, 0x02),
@@ -835,7 +840,7 @@ struct mode_def ov5647_modes[] = {
    { ov5647_mode2, NUM_ELEMENTS(ov5647_mode2), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968,  32503 },
    { ov5647_mode3, NUM_ELEMENTS(ov5647_mode3), 2592, 1944, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2, 1968, 183789 },
    { ov5647_mode4, NUM_ELEMENTS(ov5647_mode4), 1296,  976, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  996,  23216 },
-   { ov5647_mode5, NUM_ELEMENTS(ov5647_mode5), 1296,  730, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  870,  23216 },
+   { ov5647_mode5, NUM_ELEMENTS(ov5647_mode5), 1296,  730, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  754,  23216 },
    { ov5647_mode6, NUM_ELEMENTS(ov5647_mode6),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  31749 },
    { ov5647_mode7, NUM_ELEMENTS(ov5647_mode7),  640,  480, 0, BAYER_ORDER_GBRG, 10, 0x2B, 2,  484,  21165 },
 };
