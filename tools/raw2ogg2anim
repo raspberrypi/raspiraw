@@ -5,7 +5,7 @@
 if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d[d]]"; exit; fi
 
 echo "removing old auxiliary files"
-rm -f out.*.raw out.*.ppm out.*.ppm.d out.*.ppm.d.png
+rm -f out.*.raw out.*.ppm out.*.ppm.[dDT] out.*.ppm.d.png
 
 echo "copying /dev/shm/out.????.raw files"
 for((f=$2; f<=$3; ++f))
