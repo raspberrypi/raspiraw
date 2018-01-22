@@ -162,10 +162,12 @@ enum {
 	CommandFps,
 	CommandWidth,
 	CommandHeight,
+	CommandLeft,
 	CommandTop,
 	CommandVts,
 	CommandLine,
 	CommandWriteHeader0,
+	CommandWriteHeaderG,
 	CommandWriteTimestamps,
 	CommandWriteEmpty,
 };
@@ -192,8 +194,10 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandFps,		"-fps",		"f",  "Set framerate regs", -1},
 	{ CommandWidth,		"-width",	"w",  "Set current mode width", -1},
 	{ CommandHeight,	"-height",	"h",  "Set current mode height", -1},
+	{ CommandLeft,		"-left",	"lt", "Set current mode left", -1},
 	{ CommandTop,		"-top",		"tp", "Set current mode top", -1},
 	{ CommandWriteHeader0,	"-header0",	"hd0","Sets filename to write the BRCM header to", 0 },
+	{ CommandWriteHeaderG,	"-headerg",	"hdg","Sets filename to write the .pgm header to", 0 },
 	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
 };
@@ -227,8 +231,10 @@ typedef struct {
 	double fps;
 	int width;
 	int height;
+	int left;
 	int top;
 	char *write_header0;
+	char *write_headerg;
 	char *write_timestamps;
 	int write_empty;
         pts_node ptsa;
@@ -435,9 +441,9 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 					}
 					if (!cfg->write_empty)
 					{
-						 if (cfg->write_header)
-							 fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
-						 fwrite(buffer->data, buffer->length, 1, file);
+						if (cfg->write_header)
+							fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
+						fwrite(buffer->data, buffer->length, 1, file);
 					}
 					fclose(file);
 				}
@@ -720,6 +726,13 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandLeft:
+				if (sscanf(argv[i + 1], "%d", &cfg->left) != 1)
+					valid = 0;
+				else
+					i++;
+				break;
+
 			case CommandTop:
 				if (sscanf(argv[i + 1], "%d", &cfg->top) != 1)
 					valid = 0;
@@ -732,6 +745,14 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 				cfg->write_header0 = malloc(len + 1);
 				vcos_assert(cfg->write_header0);
 				strncpy(cfg->write_header0, argv[i + 1], len+1);
+				i++;
+				break;
+
+			case CommandWriteHeaderG:
+				len = strlen(argv[i + 1]);
+				cfg->write_headerg = malloc(len + 1);
+				vcos_assert(cfg->write_headerg);
+				strncpy(cfg->write_headerg, argv[i + 1], len+1);
 				i++;
 				break;
 
@@ -799,8 +820,10 @@ int main(int argc, char** argv) {
 		.fps = -1,
 		.width = -1,
 		.height = -1,
+		.left = -1,
 		.top = -1,
 		.write_header0 = NULL,
+		.write_headerg = NULL,
 		.write_timestamps = NULL,
 		.write_empty = 0,
 		.ptsa = NULL,
@@ -903,6 +926,9 @@ int main(int argc, char** argv) {
 	if (cfg.width > 0)
 	{
 		sensor_mode->width = cfg.width;
+		// TODO: handle modes different to ov5647 as well
+		modReg(sensor_mode, 0x3808, 0, 3, cfg.width >>8, EQUAL);
+		modReg(sensor_mode, 0x3809, 0, 7, cfg.width &0xFF, EQUAL);
 	}
 
 	if (cfg.height > 0)
@@ -911,6 +937,14 @@ int main(int argc, char** argv) {
 		// TODO: handle modes different to ov5647 as well
 		modReg(sensor_mode, 0x380A, 0, 3, cfg.height >>8, EQUAL);
 		modReg(sensor_mode, 0x380B, 0, 7, cfg.height &0xFF, EQUAL);
+	}
+
+	if (cfg.left > 0)
+	{
+		// TODO: handle modes different to ov5647 as well
+		int val = cfg.left * (cfg.mode < 2 ? 1 : 1 << (cfg.mode / 2 - 1));
+		modReg(sensor_mode, 0x3800, 0, 3, val >>8, EQUAL);
+		modReg(sensor_mode, 0x3801, 0, 7, val &0xFF, EQUAL);
 	}
 
 	if (cfg.top > 0)
@@ -925,6 +959,14 @@ int main(int argc, char** argv) {
 	if(cfg.bit_depth == -1)
 	{
 		cfg.bit_depth = sensor_mode->native_bit_depth;
+	}
+
+
+	if(cfg.write_headerg && (cfg.bit_depth != sensor_mode->native_bit_depth))
+	{
+		// needs change after fix for https://github.com/6by9/raspiraw/issues/2
+		vcos_log_error("--headerG supported for native bit depth only");
+		exit(-1);
 	}
 
 	if(cfg.exposure_us != -1)
@@ -1184,6 +1226,15 @@ int main(int argc, char** argv) {
 						fclose(file);
 					}
 				}
+			}
+		} else if (cfg.write_headerg) {
+			// Save pgm_header into one file only
+			FILE *file;
+			file = fopen(cfg.write_headerg, "wb");
+			if(file)
+			{
+				fprintf(file, "P5\n%d %d\n255\n", sensor_mode->width, sensor_mode->height);
+				fclose(file);
 			}
 		}
 
