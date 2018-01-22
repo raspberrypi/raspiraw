@@ -5,14 +5,14 @@
 int main(int argc, char *argv[])
 {
   FILE *src = fopen(argv[1],"rb");
-  char line[1999];
+  char line[9999];
   int w,h,f,i;
 
   assert(src);
-  fgets(line, 1999, src); assert(0 == strcmp(line, "P6\n"));
-  fgets(line, 1999, src); assert(2 == sscanf(line, "%d %d", &w, &h));
-  fgets(line, 1999, src); assert(1 == sscanf(line, "%d", &f));
-  assert(3*w < 1999);
+  fgets(line, 9999, src); assert(0 == strcmp(line, "P6\n"));
+  fgets(line, 9999, src); assert(2 == sscanf(line, "%d %d", &w, &h));
+  fgets(line, 9999, src); assert(1 == sscanf(line, "%d", &f));
+  assert(3*w < 9999);
   assert(9 <= printf("P6\n%d %d\n%d\n",w,2*h,f));
 
   for(i=0; i<h; ++i)
