@@ -916,11 +916,15 @@ int main(int argc, char** argv) {
 
 	if (cfg.fps > 0)
 	{
+		// TODO: handle modes different to ov5647 as well
+		if (strcmp(sensor->name, "ov5647")==0)
+		{
                 int n = 1000000000 / (sensor_mode->line_time_ns * cfg.fps);
 		// (n < sensor_mode->min_vts) is allowed in case of vinc jumping 2 or 3 lines
 		// ov5647 vts_reg_numbits is 10, imx vts_reg_numbits 16, so this is fine
 		modReg(sensor_mode, sensor->vts_reg+0, 0, 7, n>>8, EQUAL);
 		modReg(sensor_mode, sensor->vts_reg+1, 0, 7, n&0xFF, EQUAL);
+		}
 	}
 
 	if (cfg.width > 0)
