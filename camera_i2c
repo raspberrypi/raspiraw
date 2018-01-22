@@ -21,6 +21,8 @@ gpio -g mode 1 alt0
 gpio -g write 27 1
 #LED
 gpio -g write 5 1
+#
+echo "Use 'raspiraw -y 1' to communicate with the sensor"
 ;;
 
 '0004'|'0005'|'0006'|'000d'|'000e'|'000f')
