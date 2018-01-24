@@ -5,7 +5,7 @@ if [ "$1" = "" ]; then echo "format: `basename $0` ms"; exit; fi
 echo "removing /dev/shm/out.*.raw"
 rm -f /dev/shm/out.*.raw
 
-if [ "$2" = "" ]; then fps=120; else fps=$2; fi
+if [ "$2" = "" ]; then fps=90; else fps=$2; fi
 echo "capturing frames for ${1}ms with ${fps}fps requested"
 raspiraw -md 7 -t $1 -ts tstamps.csv -hd0 hd0.32k --height 480 --top 0 --vinc 17 --fps $fps -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
 
