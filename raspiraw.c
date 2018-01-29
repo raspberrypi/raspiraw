@@ -157,6 +157,7 @@ enum {
 	CommandCameraNum,
 	CommandExposureus,
 	CommandI2cBus,
+	CommandAwbGains,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -175,6 +176,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandCameraNum, 	"-cameranum",	"c",  "Set camera number to use (0=CAM0, 1=CAM1).", 1 },
 	{ CommandExposureus, 	"-expus",	"eus",  "Set the sensor exposure time in micro seconds.", -1 },
 	{ CommandI2cBus, 	"-i2c",	        "y",  "Set the I2C bus to use.", -1 },
+	{ CommandAwbGains, 	"-awbgains",	"awbg", "Set the AWB gains to use.", 1 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -194,6 +196,8 @@ typedef struct {
 	int camera_num;
 	int exposure_us;
 	int i2c_bus;
+	double awb_gains_r;
+	double awb_gains_b;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -624,6 +628,26 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandAwbGains:
+			{
+				double r,b;
+				int args;
+
+				args = sscanf(argv[i + 1], "%lf,%lf", &r,&b);
+
+				if (args != 2 || r > 8.0 || b > 8.0)
+				{
+					valid = 0;
+				}
+
+				cfg->awb_gains_r = r;
+				cfg->awb_gains_b = b;
+
+				i++;
+				break;
+			}
+
+
 			default:
 				valid = 0;
 				break;
@@ -1027,6 +1051,20 @@ int main(int argc, char** argv) {
 			if(status != MMAL_SUCCESS)
 			{
 				vcos_log_error("Failed to set black level");
+			}
+		}
+
+		if (cfg.awb_gains_r && cfg.awb_gains_b)
+		{
+			MMAL_PARAMETER_AWB_GAINS_T param = {{MMAL_PARAMETER_CUSTOM_AWB_GAINS,sizeof(param)}, {0,0}, {0,0}};
+
+			param.r_gain.num = (unsigned int)(cfg.awb_gains_r * 65536);
+			param.b_gain.num = (unsigned int)(cfg.awb_gains_b * 65536);
+			param.r_gain.den = param.b_gain.den = 65536;
+			status = mmal_port_parameter_set(isp->input[0], &param.hdr);
+			if(status != MMAL_SUCCESS)
+			{
+				vcos_log_error("Failed to set white balance");
 			}
 		}
 
