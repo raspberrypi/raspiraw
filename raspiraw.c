@@ -219,7 +219,7 @@ typedef struct pts_node {
 	int	idx;
 	int64_t  pts;
 	struct pts_node *nxt;
-} *pts_node;
+} *PTS_NODE_T;
 
 typedef struct {
 	int mode;
@@ -250,8 +250,8 @@ typedef struct {
 	char *write_headerg;
 	char *write_timestamps;
 	int write_empty;
-        pts_node ptsa;
-        pts_node ptso;
+        PTS_NODE_T ptsa;
+        PTS_NODE_T ptso;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -465,7 +465,7 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 					{
 						cfg->ptso->idx = count;
 						cfg->ptso->pts = buffer->pts;
-						cfg->ptso->nxt = malloc(sizeof(struct pts_node));
+						cfg->ptso->nxt = malloc(sizeof(*cfg->ptso->nxt));
 						cfg->ptso = cfg->ptso->nxt;
 					}
 					if (!cfg->write_empty)
@@ -808,7 +808,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 				vcos_assert(cfg->write_timestamps);
 				strncpy(cfg->write_timestamps, argv[i + 1], len+1);
 				i++;
-				cfg->ptsa = malloc(sizeof(struct pts_node));
+				cfg->ptsa = malloc(sizeof(*cfg->ptsa));
 				cfg->ptso = cfg->ptsa;
 				break;
 
@@ -1457,7 +1457,7 @@ component_destroy:
 		if (file)
 		{
 			int64_t old;
-			pts_node aux;
+			PTS_NODE_T aux;
 			for(aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
 			{
 				if (aux == cfg.ptsa)
@@ -1475,7 +1475,7 @@ component_destroy:
 
 		while (cfg.ptsa != cfg.ptso)
 		{
-			pts_node aux = cfg.ptsa->nxt;
+			PTS_NODE_T aux = cfg.ptsa->nxt;
 			free(cfg.ptsa);
 			cfg.ptsa = aux;
 		}
