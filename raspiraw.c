@@ -74,7 +74,7 @@ enum bayer_order {
 
 struct sensor_regs {
 	uint16_t reg;
-	uint8_t  data;
+	uint16_t data;
 };
 
 struct mode_def
@@ -107,16 +107,21 @@ struct sensor_def
 	int num_modes;
 	struct sensor_regs *stop;
 	int num_stop_regs;
-	uint8_t i2c_addr;
-	int i2c_addressing;
-	int i2c_ident_length;
-	uint16_t i2c_ident_reg;
-	uint16_t i2c_ident_value;
 
-	uint16_t vflip_reg;
-	int vflip_reg_bit;
-	uint16_t hflip_reg;
-	int hflip_reg_bit;
+	uint8_t i2c_addr;		// Device I2C slave address
+	int i2c_addressing;		// Length of register address values
+	int i2c_data_size;		// Length of register data to write
+
+	//  Detecting the device
+	int i2c_ident_length;		// Length of I2C ID register
+	uint16_t i2c_ident_reg;		// ID register address
+	uint16_t i2c_ident_value;	// ID register value
+
+	// Flip configuration
+	uint16_t vflip_reg;		// Register for VFlip
+	int vflip_reg_bit;		// Bit in that register for VFlip
+	uint16_t hflip_reg;		// Register for HFlip
+	int hflip_reg_bit;		// Bit in that register for HFlip
 
 	uint16_t exposure_reg;
 	int exposure_reg_num_bits;
@@ -292,16 +297,32 @@ void send_regs(int fd, const struct sensor_def *sensor, const struct sensor_regs
 		{
 			if (sensor->i2c_addressing == 1)
 			{
-				unsigned char msg[2] = {regs[i].reg, regs[i].data};
-				if(write(fd, msg, 2) != 2)
+				unsigned char msg[3] = {regs[i].reg, regs[i].data & 0xFF };
+				int len = 2;
+
+				if (sensor->i2c_data_size == 2)
+				{
+					msg[1] = (regs[i].data>>8) & 0xFF;
+					msg[2] = regs[i].data & 0xFF;
+					len = 3;
+				}
+				if(write(fd, msg, len) != len)
 				{
 					vcos_log_error("Failed to write register index %d (%02X val %02X)", i, regs[i].reg, regs[i].data);
 				}
 			}
 			else
 			{
-				unsigned char msg[3] = {regs[i].reg>>8, regs[i].reg, regs[i].data};
-				if(write(fd, msg, 3) != 3)
+				unsigned char msg[4] = {regs[i].reg>>8, regs[i].reg, regs[i].data};
+				int len = 3;
+
+				if (sensor->i2c_data_size == 2)
+				{
+					msg[2] = regs[i].data >> 8;
+					msg[3] = regs[i].data;
+					len = 4;
+				}
+				if(write(fd, msg, len) != len)
 				{
 					vcos_log_error("Failed to write register index %d", i);
 				}
@@ -1158,7 +1179,7 @@ enum operation {
 void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum operation op)
 {
 	int i = 0;
-	uint8_t val;
+	uint16_t val;
 	while(i < mode->num_regs && mode->regs[i].reg != reg) i++;
 	if(i == mode->num_regs) {
 		vcos_log_error("Reg: %04X not found!\n", reg);
