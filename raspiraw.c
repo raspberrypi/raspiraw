@@ -97,6 +97,7 @@ struct mode_def
 	uint32_t timing5;
 	uint32_t term1;
 	uint32_t term2;
+	int black_level;
 };
 
 struct sensor_def
@@ -1018,6 +1019,15 @@ int main(int argc, char** argv) {
 		{
 			vcos_log_error("Failed to commit port format on isp output");
 			goto pool_destroy;
+		}
+
+		if (sensor_mode->black_level)
+		{
+			status = mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL, sensor_mode->black_level);
+			if(status != MMAL_SUCCESS)
+			{
+				vcos_log_error("Failed to set black level");
+			}
 		}
 
 		status = mmal_connection_create(&isp_render, isp->output[0], render->input[0], MMAL_CONNECTION_FLAG_TUNNELLING);
