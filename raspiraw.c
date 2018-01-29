@@ -122,6 +122,9 @@ struct sensor_def
 	int vflip_reg_bit;		// Bit in that register for VFlip
 	uint16_t hflip_reg;		// Register for HFlip
 	int hflip_reg_bit;		// Bit in that register for HFlip
+	int flips_dont_change_bayer_order;	// Some sensors do not change the
+						// Bayer order by adjusting X/Y starts
+						// to compensate.
 
 	uint16_t exposure_reg;
 	int exposure_reg_num_bits;
@@ -1218,14 +1221,14 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 	if (sensor->vflip_reg)
 	{
 		modRegBit(mode, sensor->vflip_reg, sensor->vflip_reg_bit, vflip, XOR);
-		if(vflip)
+		if(vflip && !sensor->flips_dont_change_bayer_order)
 			mode->order ^= 2;
 	}
 
 	if (sensor->hflip_reg)
 	{
 		modRegBit(mode, sensor->hflip_reg, sensor->hflip_reg_bit, hflip, XOR);
-		if(hflip)
+		if(hflip && !sensor->flips_dont_change_bayer_order)
 			mode->order ^= 1;
 	}
 
