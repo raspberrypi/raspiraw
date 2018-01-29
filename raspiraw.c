@@ -1217,14 +1217,14 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 {
 	if (sensor->vflip_reg)
 	{
-		modRegBit(mode, sensor->vflip_reg, 1, vflip, XOR);
+		modRegBit(mode, sensor->vflip_reg, sensor->vflip_reg_bit, vflip, XOR);
 		if(vflip)
 			mode->order ^= 2;
 	}
 
 	if (sensor->hflip_reg)
 	{
-		modRegBit(mode, sensor->hflip_reg, 1, hflip, XOR);
+		modRegBit(mode, sensor->hflip_reg, sensor->hflip_reg_bit, hflip, XOR);
 		if(hflip)
 			mode->order ^= 1;
 	}
