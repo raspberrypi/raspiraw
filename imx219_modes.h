@@ -568,14 +568,22 @@ struct sensor_regs imx219_mode7[] =
 };
 
 struct mode_def imx219_modes[] = {
-   { imx219_8MPix, NUM_ELEMENTS(imx219_8MPix), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2504, 18904 },
-   { imx219_mode1, NUM_ELEMENTS(imx219_mode1), 1920, 1080, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 1084, 18904 },
-   { imx219_mode2, NUM_ELEMENTS(imx219_mode2), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2468, 18904 },
-   { imx219_mode3, NUM_ELEMENTS(imx219_mode3), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2468, 18904 },
-   { imx219_mode4, NUM_ELEMENTS(imx219_mode4), 1640, 1232, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 1236, 18904 },
-   { imx219_mode5, NUM_ELEMENTS(imx219_mode5), 1640,  922, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  926, 18904 },
-   { imx219_mode6, NUM_ELEMENTS(imx219_mode6), 1280,  720, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  724, 19517 },
-   { imx219_mode7, NUM_ELEMENTS(imx219_mode7),  640,  480, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  484, 19517 },
+   { imx219_8MPix, NUM_ELEMENTS(imx219_8MPix), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2504, 18904,
+		0, 0, 0, 0, 0, 0, 0, 6 },
+   { imx219_mode1, NUM_ELEMENTS(imx219_mode1), 1920, 1080, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 1084, 18904,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode2, NUM_ELEMENTS(imx219_mode2), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2468, 18904,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode3, NUM_ELEMENTS(imx219_mode3), 3280, 2464, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 2468, 18904,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode4, NUM_ELEMENTS(imx219_mode4), 1640, 1232, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 1236, 18904,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode5, NUM_ELEMENTS(imx219_mode5), 1640,  922, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  926, 18904,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode6, NUM_ELEMENTS(imx219_mode6), 1280,  720, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  724, 19517,
+		0, 0, 0, 0, 0, 0, 0, 66 },
+   { imx219_mode7, NUM_ELEMENTS(imx219_mode7),  640,  480, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2,  484, 19517,
+		0, 0, 0, 0, 0, 0, 0, 66 },
 };
 
 //From https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c

@@ -1357,7 +1357,7 @@ int main(int argc, char** argv) {
 			status = mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL, sensor_mode->black_level);
 			if (status != MMAL_SUCCESS)
 			{
-				vcos_log_error("Failed to set black level");
+				vcos_log_error("Failed to set black level - try updating firmware");
 			}
 		}
 
