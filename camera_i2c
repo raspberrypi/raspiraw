@@ -38,8 +38,8 @@ gpio -g write 21 1
 gpio -g write 5 1
 ;;
 
-'0010'|'0012'|'0013'|'1041'|'a01041'|'a21041'|'900093')
-echo "A+, B+, and B2 all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
+'0010'|'0012'|'0013'|'1041'|'a01041'|'a21041'|'900093'|'920093')
+echo "A+, B+, B2, and Zero (not W) all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
 # i2c can be on pins 0 and 1, so make sure they are not set to alt0
 gpio -g mode 0 in
 gpio -g mode 1 in
@@ -54,8 +54,8 @@ gpio -g write 41 1
 gpio -g write 32 1
 ;;
 
-'900093'|'920093'|'9000c1')
-echo "PiZero / PiZero W - I2C 0 on GPIO 28 & 29. GPIOs 40 & 44 for LED and power"
+'9000c1')
+echo "PiZero W - I2C 0 on GPIO 28 & 29. GPIOs 40 & 44 for LED and power"
 # i2c can be on pins 0 and 1, so make sure they are not set to alt0
 gpio -g mode 0 in
 gpio -g mode 1 in
