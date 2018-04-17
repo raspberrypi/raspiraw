@@ -1404,11 +1404,14 @@ int main(int argc, char** argv) {
 	stop_camera_streaming(sensor);
 
 port_disable:
-	status = mmal_port_disable(output);
-	if (status != MMAL_SUCCESS)
+	if (cfg.capture)
 	{
-		vcos_log_error("Failed to disable port");
-		return -1;
+		status = mmal_port_disable(output);
+		if (status != MMAL_SUCCESS)
+		{
+			vcos_log_error("Failed to disable port");
+			return -1;
+		}
 	}
 pool_destroy:
 	if (pool)
