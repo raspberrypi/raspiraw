@@ -1572,7 +1572,8 @@ void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum ope
 	switch(op)
 	{
 		case EQUAL:
-			val = (val | (1 << bit)) & (~( (1 << bit) ^ (value << bit) ));
+			val = val & ~(1 << bit);
+			val = val | (value << bit);
 			break;
 		case SET:
 			val = val | (1 << bit);
@@ -1621,13 +1622,12 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 		else
 		{
 			uint8_t val;
-			int i, j=sensor->exposure_reg_num_bits-1;
+			int i, j=VCOS_ALIGN_DOWN(sensor->exposure_reg_num_bits-1, 8);
 			int num_regs = (sensor->exposure_reg_num_bits+7)>>3;
-
 			for(i=0; i<num_regs; i++, j-=8)
 			{
-				val = (exposure >> (j&~7)) & 0xFF;
-				modReg(mode, sensor->exposure_reg+i, 0, j&0x7, val, EQUAL);
+				val = (exposure >> j) & 0xFF;
+				modReg(mode, sensor->exposure_reg+i, 0, 7, val, EQUAL);
 				vcos_log_error("Set exposure %04X to %02X", sensor->exposure_reg+i, val);
 			}
 		}
@@ -1642,13 +1642,13 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 		else
 		{
 			uint8_t val;
-			int i, j=sensor->vts_reg_num_bits-1;
+			int i, j=VCOS_ALIGN_DOWN(sensor->vts_reg_num_bits-1, 8);
 			int num_regs = (sensor->vts_reg_num_bits+7)>>3;
 
 			for(i = 0; i<num_regs; i++, j-=8)
 			{
-				val = (exposure >> (j&~7)) & 0xFF;
-				modReg(mode, sensor->vts_reg+i, 0, j&0x7, val, EQUAL);
+				val = (exposure >> j) & 0xFF;
+				modReg(mode, sensor->vts_reg+i, 0, 7, val, EQUAL);
 				vcos_log_error("Set vts %04X to %02X", sensor->vts_reg+i, val);
 			}
 		}
@@ -1663,13 +1663,13 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 		else
 		{
 			uint8_t val;
-			int i, j=sensor->gain_reg_num_bits-1;
+			int i, j=VCOS_ALIGN_DOWN(sensor->gain_reg_num_bits-1, 8);
 			int num_regs = (sensor->gain_reg_num_bits+7)>>3;
 
 			for(i = 0; i<num_regs; i++, j-=8)
 			{
-				val = (gain >> (j&~7)) & 0xFF;
-				modReg(mode, sensor->gain_reg+i, 0, j&0x7, val, EQUAL);
+				val = (gain >> j) & 0xFF;
+				modReg(mode, sensor->gain_reg+i, 0, 7, val, EQUAL);
 				vcos_log_error("Set gain %04X to %02X", sensor->gain_reg+i, val);
 			}
 		}
