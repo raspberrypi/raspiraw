@@ -180,6 +180,7 @@ enum {
 	CommandWriteHeaderG,
 	CommandWriteTimestamps,
 	CommandWriteEmpty,
+	CommandDecodeMetadata,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -211,6 +212,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandWriteHeaderG,	"-headerg",	"hdg","Sets filename to write the .pgm header to", 0 },
 	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
+	{ CommandDecodeMetadata,	"-metadata",	"m","Decode register metadata", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -252,6 +254,7 @@ typedef struct {
 	int write_empty;
         PTS_NODE_T ptsa;
         PTS_NODE_T ptso;
+        int decodemetadata;
 } RASPIRAW_PARAMS_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
@@ -440,6 +443,38 @@ MMAL_STATUS_T create_filenames(char** finalName, char * pattern, int frame)
 	return MMAL_SUCCESS;
 }
 
+void decodemetadataline(uint8_t *data)
+{
+	int c=1;
+	uint8_t tag,dta;
+	uint16_t reg=-1;
+
+	if (data[0]==0x0a)
+	{
+
+		while (data[c]!=0x07)
+		{
+			tag=data[c++];
+			if (c%5==4)
+				c++;
+			dta=data[c++];
+			if (tag==0xaa)
+				reg=(reg&0x00ff)|(dta<<8);
+			else if (tag==0xa5)
+				reg=(reg&0xff00)|dta;
+			else if (tag==0x5a)
+				vcos_log_error("Register 0x%04x = 0x%02x",reg++,dta);
+			else if (tag==0x55)
+				vcos_log_error("Skip     0x%04x",reg++);
+			else
+				vcos_log_error("Metadata decode failed %x %x %x",reg,tag,dta);
+		}
+	}
+	else
+		vcos_log_error("Doesn't looks like register set %x!=0x0a",data[0]);
+
+}
+
 int running = 0;
 static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
@@ -479,6 +514,15 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 				free(filename);
 			}
 		}
+
+		if (cfg->decodemetadata && (buffer->flags&MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
+		{
+			vcos_log_error("First metadata line");
+			decodemetadataline(buffer->data);
+			vcos_log_error("Second metadata line");
+			decodemetadataline(buffer->data+VCOS_ALIGN_UP(5*(port->format->es->video.width/4),16));
+		}
+
 		buffer->length = 0;
 		mmal_port_send_buffer(port, buffer);
 	}
@@ -814,6 +858,10 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandWriteEmpty:
 				cfg->write_empty = 1;
+				break;
+
+			case CommandDecodeMetadata:
+				cfg->decodemetadata = 1;
 				break;
 
 			default:
