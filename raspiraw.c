@@ -212,7 +212,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandWriteHeaderG,	"-headerg",	"hdg","Sets filename to write the .pgm header to", 0 },
 	{ CommandWriteTimestamps,"-tstamps",	"ts", "Sets filename to write timestamps to", 0 },
 	{ CommandWriteEmpty,	"-empty",	"emp","Write empty output files", 0 },
-	{ CommandDecodeMetadata,	"-metadata",	"meta","Decode register metadata", 0 },
+	{ CommandDecodeMetadata,	"-metadata",	"m","Decode register metadata", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
