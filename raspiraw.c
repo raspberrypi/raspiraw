@@ -443,7 +443,7 @@ MMAL_STATUS_T create_filenames(char** finalName, char * pattern, int frame)
 	return MMAL_SUCCESS;
 }
 
-void decodemetadataline(uint8_t *data)
+void decodemetadataline(uint8_t *data, int bpp)
 {
 	int c=1;
 	uint8_t tag,dta;
@@ -455,9 +455,12 @@ void decodemetadataline(uint8_t *data)
 		while (data[c]!=0x07)
 		{
 			tag=data[c++];
-			if (c%5==4)
+			if (bpp=10 && c%5==4)
+				c++;
+			if (bpp=12 && c%3==2)
 				c++;
 			dta=data[c++];
+
 			if (tag==0xaa)
 				reg=(reg&0x00ff)|(dta<<8);
 			else if (tag==0xa5)
@@ -472,6 +475,26 @@ void decodemetadataline(uint8_t *data)
 	}
 	else
 		vcos_log_error("Doesn't looks like register set %x!=0x0a",data[0]);
+
+}
+
+int encoding_to_bpp(uint32_t encoding)
+{
+       switch(encoding)
+       {
+       case    MMAL_ENCODING_BAYER_SBGGR10P:
+       case    MMAL_ENCODING_BAYER_SGBRG10P:
+       case    MMAL_ENCODING_BAYER_SGRBG10P:
+       case    MMAL_ENCODING_BAYER_SRGGB10P:
+               return 10;
+       case    MMAL_ENCODING_BAYER_SBGGR12P:
+       case    MMAL_ENCODING_BAYER_SGBRG12P:
+       case    MMAL_ENCODING_BAYER_SGRBG12P:
+       case    MMAL_ENCODING_BAYER_SRGGB12P:
+               return 12;
+       default:
+               return 8;
+       };
 
 }
 
@@ -517,10 +540,11 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 
 		if (cfg->decodemetadata && (buffer->flags&MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
 		{
+			int bpp = encoding_to_bpp(port->format->encoding);
 			vcos_log_error("First metadata line");
-			decodemetadataline(buffer->data);
+			decodemetadataline(buffer->data, bpp);
 			vcos_log_error("Second metadata line");
-			decodemetadataline(buffer->data+VCOS_ALIGN_UP(5*(port->format->es->video.width/4),16));
+			decodemetadataline(buffer->data+VCOS_ALIGN_UP(5*(port->format->es->video.width/4),16), bpp);
 		}
 
 		buffer->length = 0;
