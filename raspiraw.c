@@ -916,39 +916,27 @@ enum operation {
 void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
 
 int main(int argc, char** argv) {
-	RASPIRAW_PARAMS_T cfg = {
-		.mode = 0,
-		.hflip = 0,
-		.vflip = 0,
-		.exposure = -1,
-		.gain = -1,
-		.output = NULL,
-		.capture = 0,
-		.write_header = 0,
-		.timeout = 5000,
-		.saverate = 20,
-		.bit_depth = -1,
-		.camera_num = -1,
-		.exposure_us = -1,
-		.i2c_bus = DEFAULT_I2C_DEVICE,
-		.regs = NULL,
-		.hinc = -1,
-		.vinc = -1,
-		.fps = -1,
-		.width = -1,
-		.height = -1,
-		.left = -1,
-		.top = -1,
-		.write_header0 = NULL,
-		.write_headerg = NULL,
-		.write_timestamps = NULL,
-		.write_empty = 0,
-		.ptsa = NULL,
-		.ptso = NULL,
-	};
+	RASPIRAW_PARAMS_T cfg = { 0 };
 	uint32_t encoding;
 	const struct sensor_def *sensor;
 	struct mode_def *sensor_mode = NULL;
+
+	//Initialise any non-zero config values.
+	cfg.exposure = -1;
+	cfg.gain = -1;
+	cfg.timeout = 5000;
+	cfg.saverate = 20;
+	cfg.bit_depth = -1;
+	cfg.camera_num = -1;
+	cfg.exposure_us = -1;
+	cfg.i2c_bus = DEFAULT_I2C_DEVICE;
+	cfg.hinc = -1;
+	cfg.vinc = -1;
+	cfg.fps = -1;
+	cfg.width = -1;
+	cfg.height = -1;
+	cfg.left = -1;
+	cfg.top = -1;
 
 	bcm_host_init();
 	vcos_log_register("RaspiRaw", VCOS_LOG_CATEGORY);
