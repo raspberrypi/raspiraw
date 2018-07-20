@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RAWHEADER_H_
 #define RAWHEADER_H_
 
-#include "vc_image_types.h"
+#include "interface/vctypes/vc_image_types.h"
 
 #define BRCM_ID_SIG 0x4D435242 /* 'BRCM' */
 #define HEADER_VERSION 111
