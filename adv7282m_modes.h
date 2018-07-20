@@ -302,9 +302,9 @@ struct sensor_regs adv7282_ntsc[] =
 
 struct mode_def adv7282_modes[] = {
    { adv7282_pal,  NUM_ELEMENTS(adv7282_pal),  720, 578, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
-                     2, 6, 2, 6, 0, 1, 1 },
+                     {2, 6, 2, 6, 0}, {1, 1} },
    { adv7282_ntsc, NUM_ELEMENTS(adv7282_ntsc), 720, 480, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
-                     2, 6, 2, 6, 0, 1, 1 },
+                     {2, 6, 2, 6, 0}, {1, 1} },
 };
 
 #undef addreg
