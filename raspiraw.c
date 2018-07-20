@@ -1666,11 +1666,12 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 			int i, j=sensor->gain_reg_num_bits-1;
 			int num_regs = (sensor->gain_reg_num_bits+7)>>3;
 
-			for(i = 0; i<num_regs; i++, j-=8)
+			for(i = 0; i<num_regs; i++)
 			{
 				val = (gain >> (j&~7)) & 0xFF;
 				modReg(mode, sensor->gain_reg+i, 0, j&0x7, val, EQUAL);
 				vcos_log_error("Set gain %04X to %02X", sensor->gain_reg+i, val);
+				j -= ((j&0x7)+1);
 			}
 		}
 	}
