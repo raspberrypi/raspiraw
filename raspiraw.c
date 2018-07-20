@@ -88,7 +88,7 @@ struct mode_def
 	int native_bit_depth;
 	uint8_t image_id;
 	uint8_t data_lanes;
-	unsigned int min_vts;
+	int min_vts;
 	int line_time_ns;
 	uint32_t timing[5];
 	uint32_t term[2];
@@ -283,7 +283,7 @@ static int i2c_rd(int fd, uint8_t i2c_addr, uint16_t reg, uint8_t *values, uint3
 
 	err = ioctl(fd, I2C_RDWR, &msgset);
 	//vcos_log_error("Read i2c addr %02X, reg %04X (len %d), value %02X, err %d", i2c_addr, msgs[0].buf[0], msgs[0].len, values[0], err);
-	if (err != msgset.nmsgs)
+	if (err != (int)msgset.nmsgs)
 		return -1;
 
 	return 0;
@@ -1100,9 +1100,9 @@ int main(int argc, char** argv) {
 	MMAL_POOL_T *pool = NULL;
 	MMAL_CONNECTION_T *rawcam_isp = NULL;
 	MMAL_CONNECTION_T *isp_render = NULL;
-	MMAL_PARAMETER_CAMERA_RX_CONFIG_T rx_cfg = {{MMAL_PARAMETER_CAMERA_RX_CONFIG, sizeof(rx_cfg)}};
-	MMAL_PARAMETER_CAMERA_RX_TIMING_T rx_timing = {{MMAL_PARAMETER_CAMERA_RX_TIMING, sizeof(rx_timing)}};
-	int i;
+	MMAL_PARAMETER_CAMERA_RX_CONFIG_T rx_cfg;
+	MMAL_PARAMETER_CAMERA_RX_TIMING_T rx_timing;
+	unsigned int i;
 
 	bcm_host_init();
 	vcos_log_register("RaspiRaw", VCOS_LOG_CATEGORY);
@@ -1129,6 +1129,9 @@ int main(int argc, char** argv) {
 	}
 
 	output = rawcam->output[0];
+
+	rx_cfg.hdr.id = MMAL_PARAMETER_CAMERA_RX_CONFIG;
+	rx_cfg.hdr.size = sizeof(rx_cfg);
 	status = mmal_port_parameter_get(output, &rx_cfg.hdr);
 	if (status != MMAL_SUCCESS)
 	{
@@ -1198,6 +1201,9 @@ int main(int argc, char** argv) {
 		vcos_log_error("Failed to set cfg");
 		goto component_destroy;
 	}
+
+	rx_timing.hdr.id = MMAL_PARAMETER_CAMERA_RX_TIMING;
+	rx_timing.hdr.size = sizeof(rx_timing);
 	status = mmal_port_parameter_get(output, &rx_timing.hdr);
 	if (status != MMAL_SUCCESS)
 	{
@@ -1523,7 +1529,7 @@ component_destroy:
 		file = fopen(cfg.write_timestamps, "wb");
 		if (file)
 		{
-			int64_t old;
+			int64_t old = 0;
 			PTS_NODE_T aux;
 			for(aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
 			{
