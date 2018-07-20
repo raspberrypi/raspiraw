@@ -450,9 +450,9 @@ void decodemetadataline(uint8_t *data, int bpp)
 		while (data[c]!=0x07)
 		{
 			tag=data[c++];
-			if (bpp=10 && c%5==4)
+			if (bpp==10 && (c%5)==4)
 				c++;
-			if (bpp=12 && c%3==2)
+			if (bpp==12 && (c%3)==2)
 				c++;
 			dta=data[c++];
 
