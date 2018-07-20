@@ -690,29 +690,38 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					const char *percent = argv[i+1];
 					while(valid && *percent && (percent=strchr(percent, '%')) != NULL)
 					{
-					int digits=0;
-					percent++;
-					while(isdigit(*percent))
-					{
+						int digits=0;
 						percent++;
-						digits++;
+						while(isdigit(*percent))
+						{
+							percent++;
+							digits++;
+						}
+						if (!((*percent == '%' && !digits) || *percent == 'd'))
+						{
+							valid = 0;
+							fprintf(stderr, "Filename contains %% characters, but not %%d or %%%% - sorry, will fail\n");
+						}
+						percent++;
 					}
-					if (!((*percent == '%' && !digits) || *percent == 'd'))
+					cfg->output = malloc(len + 10); // leave enough space for any timelapse generated changes to filename
+					if (cfg->output)
 					{
-						valid = 0;
-						fprintf(stderr, "Filename contains %% characters, but not %%d or %%%% - sorry, will fail\n");
+						strncpy(cfg->output, argv[i + 1], len+1);
+						i++;
+						cfg->capture = 1;
 					}
-					percent++;
-				}
-				cfg->output = malloc(len + 10); // leave enough space for any timelapse generated changes to filename
-				vcos_assert(cfg->output);
-				if (cfg->output)
-					strncpy(cfg->output, argv[i + 1], len+1);
-					i++;
-					cfg->capture = 1;
+					else
+					{
+						fprintf(stderr, "internal error - allocation fail\n");
+						valid = 0;
+					}
+
 				}
 				else
+				{
 					valid = 0;
+				}
 				break;
 			}
 
