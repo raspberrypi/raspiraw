@@ -301,10 +301,38 @@ struct sensor_regs adv7282_ntsc[] =
 };
 
 struct mode_def adv7282_modes[] = {
-   { adv7282_pal,  NUM_ELEMENTS(adv7282_pal),  720, 578, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
-                     {2, 6, 2, 6, 0}, {1, 1} },
-   { adv7282_ntsc, NUM_ELEMENTS(adv7282_ntsc), 720, 480, MMAL_ENCODING_UYVY, 0, 0, 0x1E, 1, 0, 0,
-                     {2, 6, 2, 6, 0}, {1, 1} },
+   {
+      .regs          = adv7282_pal,
+      .num_regs      = NUM_ELEMENTS(adv7282_pal),
+      .width         = 720,
+      .height        = 576,
+      .encoding      = MMAL_ENCODING_UYVY,
+      .order         = 0,
+      .native_bit_depth = 0,
+      .image_id      = 0x1E,
+      .data_lanes    = 1,
+      .min_vts       = 0,
+      .line_time_ns  = 0,
+      .timing        = {2, 6, 2, 6, 0},
+      .term          = {1, 1},
+      .black_level   = 0,
+   },
+   {
+      .regs          = adv7282_ntsc,
+      .num_regs      = NUM_ELEMENTS(adv7282_ntsc),
+      .width         = 720,
+      .height        = 480,
+      .encoding      = MMAL_ENCODING_UYVY,
+      .order         = 0,
+      .native_bit_depth = 0,
+      .image_id      = 0x1E,
+      .data_lanes    = 1,
+      .min_vts       = 0,
+      .line_time_ns  = 0,
+      .timing        = {2, 6, 2, 6, 0},
+      .term          = {1, 1},
+      .black_level   = 0,
+   },
 };
 
 #undef addreg
