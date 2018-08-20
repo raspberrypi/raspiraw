@@ -721,9 +721,9 @@ struct sensor_def imx219 = {
       .i2c_ident_value =      0x1902,     // 0x0219 bytes reversed
 
       .vflip_reg =            0x172,
-      .vflip_reg_bit =        0,
+      .vflip_reg_bit =        1,
       .hflip_reg =            0x172,
-      .hflip_reg_bit =        1,
+      .hflip_reg_bit =        0,
 
       .exposure_reg =         0x015A,
       .exposure_reg_num_bits = 16,
