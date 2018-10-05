@@ -1621,7 +1621,7 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 		else
 		{
 			uint8_t val;
-			int i, j=sensor->exposure_reg_num_bits-1;
+			int i;
 			int num_regs = (sensor->exposure_reg_num_bits+7)>>3;
 			int bit_end = (sensor->exposure_reg_num_bits-1) & 0x7;
 
