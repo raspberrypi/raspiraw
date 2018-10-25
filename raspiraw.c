@@ -589,10 +589,12 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 	if (cfg->decodemetadata && (buffer->flags&MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
 	{
 		int bpp = encoding_to_bpp(port->format->encoding);
+		int pitch = mmal_encoding_width_to_stride(port->format->encoding, port->format->es->video.width);
+
 		vcos_log_error("First metadata line");
 		decodemetadataline(buffer->user_data, bpp);
 		vcos_log_error("Second metadata line");
-		decodemetadataline(buffer->user_data+VCOS_ALIGN_UP(5*(port->format->es->video.width/4),16), bpp);
+		decodemetadataline(buffer->user_data+pitch, bpp);
 	}
 
 	/* Pass the buffers off to any other MMAL sinks. */
