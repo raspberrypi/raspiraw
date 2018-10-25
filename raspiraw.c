@@ -181,6 +181,9 @@ enum {
 	CommandAwb,
 	CommandNoPreview,
 	CommandProcessing,
+	CommandPreview,
+	CommandFullScreen,
+	CommandOpacity,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -216,6 +219,9 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandAwb,		"-awb",		"awb","Use a simple grey-world AWB algorithm", 0 },
 	{ CommandNoPreview,	"-nopreview",	"n",  "Do not send the stream to the display", 0 },
 	{ CommandProcessing,	"-processing",	"P",  "Pass images into an image processing function", 0 },
+	{ CommandPreview,	"-preview",	"p",  "Preview window settings <'x,y,w,h'>", 1 },
+	{ CommandFullScreen,	"-fullscreen",	"fs", "Fullscreen preview mode", 0 },
+	{ CommandOpacity,	"-opacity",	"op", "Preview window opacity (0-255)", 1},
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -225,6 +231,8 @@ typedef struct pts_node {
 	int64_t  pts;
 	struct pts_node *nxt;
 } *PTS_NODE_T;
+
+#define DEFAULT_PREVIEW_LAYER 3
 
 typedef struct {
 	int mode;
@@ -261,6 +269,9 @@ typedef struct {
         int awb;
         int no_preview;
         int processing;
+	int fullscreen;		// 0 is use previewRect, non-zero to use full screen
+	int opacity;		// Opacity of window - 0 = transparent, 255 = opaque
+	MMAL_RECT_T preview_window;	// Destination rectangle for the preview window.
 } RASPIRAW_PARAMS_T;
 
 typedef struct {
@@ -981,6 +992,38 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 			case CommandProcessing:
 				cfg->processing = 1;
 				break;
+			case CommandPreview: // Preview window
+			{
+				int tmp;
+
+				tmp = sscanf(argv[i + 1], "%d,%d,%d,%d",
+					&cfg->preview_window.x, &cfg->preview_window.y,
+					&cfg->preview_window.width, &cfg->preview_window.height);
+
+				// Failed to get any window parameters, so revert to full screen
+				if (tmp != 4)
+					cfg->fullscreen = 1;
+				else
+					cfg->fullscreen = 0;
+
+				i++;
+
+				break;
+			}
+
+			case CommandFullScreen: // Want full screen preview mode (overrides display rect)
+				cfg->fullscreen = 1;
+
+				i++;
+				break;
+
+			case CommandOpacity: // Define preview window opacity
+				if (sscanf(argv[i + 1], "%u", &cfg->opacity) != 1)
+					cfg->opacity = 255;
+				else
+					i++;
+				break;
+
 
 			default:
 				valid = 0;
@@ -1237,6 +1280,8 @@ int main(int argc, char** argv) {
 	cfg.height = -1;
 	cfg.left = -1;
 	cfg.top = -1;
+	cfg.opacity = 255;
+	cfg.fullscreen = 1;
 
 	bcm_host_init();
 	vcos_log_register("RaspiRaw", VCOS_LOG_CATEGORY);
@@ -1759,6 +1804,37 @@ int main(int argc, char** argv) {
 			if (status != MMAL_SUCCESS)
 			{
 				vcos_log_error("Failed to set white balance");
+			}
+		}
+
+		{
+			MMAL_DISPLAYREGION_T param;
+			param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
+			param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
+
+			param.set = MMAL_DISPLAY_SET_LAYER;
+			param.layer = DEFAULT_PREVIEW_LAYER;
+
+			param.set |= MMAL_DISPLAY_SET_ALPHA;
+			param.alpha = cfg.opacity;
+
+			if (cfg.fullscreen)
+			{
+				param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
+				param.fullscreen = 1;
+			}
+			else
+			{
+				param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
+				param.fullscreen = 0;
+				param.dest_rect = cfg.preview_window;
+			}
+
+			status = mmal_port_parameter_set(render->input[0], &param.hdr);
+
+			if (status != MMAL_SUCCESS && status != MMAL_ENOSYS)
+			{
+				vcos_log_error("unable to set preview port parameters (%u)", status);
 			}
 		}
 
