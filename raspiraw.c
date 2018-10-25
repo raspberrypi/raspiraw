@@ -215,7 +215,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandDecodeMetadata,"-metadata",	"m","Decode register metadata", 0 },
 	{ CommandAwb,		"-awb",		"awb","Use a simple grey-world AWB algorithm", 0 },
 	{ CommandNoPreview,	"-nopreview",	"n",  "Do not send the stream to the display", 0 },
-	{ CommandProcessing,	"-processing",	"p",  "Pass images into an image processing function", 0 },
+	{ CommandProcessing,	"-processing",	"P",  "Pass images into an image processing function", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
