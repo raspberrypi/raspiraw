@@ -180,6 +180,7 @@ enum {
 	CommandDecodeMetadata,
 	CommandAwb,
 	CommandNoPreview,
+	CommandProcessing,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -214,6 +215,7 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandDecodeMetadata,"-metadata",	"m","Decode register metadata", 0 },
 	{ CommandAwb,		"-awb",		"awb","Use a simple grey-world AWB algorithm", 0 },
 	{ CommandNoPreview,	"-nopreview",	"n",  "Do not send the stream to the display", 0 },
+	{ CommandProcessing,	"-processing",	"p",  "Pass images into an image processing function", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -258,6 +260,7 @@ typedef struct {
         int decodemetadata;
         int awb;
         int no_preview;
+        int processing;
 } RASPIRAW_PARAMS_T;
 
 typedef struct {
@@ -272,7 +275,11 @@ typedef struct {
         MMAL_QUEUE_T *awb_queue;
         int awb_thread_quit;
         MMAL_PARAMETER_AWB_GAINS_T wb_gains;
+
+        MMAL_QUEUE_T *processing_queue;
+        int processing_thread_quit;
 } RASPIRAW_CALLBACK_T;
+
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
 
 static int i2c_rd(int fd, uint8_t i2c_addr, uint16_t reg, uint8_t *values, uint32_t n, const struct sensor_def *sensor)
@@ -601,6 +608,15 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 			/* Relying on the AWB thread to release this buffer`refcount */
 			mmal_buffer_header_acquire(buffer);
 			mmal_queue_put(dev->awb_queue, buffer);
+			//vcos_log_error("send buffer %p to awb", buffer);
+		}
+
+		/* Pass to the processing thread */
+		if (dev->processing_queue)
+		{
+			/* Relying on the processing thread to release this buffer`refcount */
+			mmal_buffer_header_acquire(buffer);
+			mmal_queue_put(dev->processing_queue, buffer);
 			//vcos_log_error("send buffer %p to awb", buffer);
 		}
 	}
@@ -962,6 +978,10 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 				cfg->no_preview = 1;
 				break;
 
+			case CommandProcessing:
+				cfg->processing = 1;
+				break;
+
 			default:
 				valid = 0;
 				break;
@@ -1151,6 +1171,35 @@ static void * awb_thread_task(void *arg)
 	return NULL;
 }
 
+static void * processing_thread_task(void *arg)
+{
+	RASPIRAW_CALLBACK_T *dev = (RASPIRAW_CALLBACK_T *)arg;
+	MMAL_BUFFER_HEADER_T *buffer;
+
+	while (!dev->processing_thread_quit)
+	{
+		//Being lazy and using a timed wait instead of setting up a
+		//mechanism for skipping this when destroying the thread
+		buffer = mmal_queue_timedwait(dev->processing_queue, 1000);
+		if (!buffer)
+			continue;
+		if (!mmal_queue_length(dev->processing_queue))
+		{
+			/* If more buffers in the queue, loop so we're working
+			 * on the latest one
+			 */
+			// DO SOME FORM OF PROCESSING ON THE RAW BAYER DATA HERE
+			// buffer->user_data points to the data, with buffer->length
+			// being the length of the data.
+		}
+
+		mmal_buffer_header_release(buffer);
+		buffers_to_rawcam(dev);
+	}
+
+	return NULL;
+}
+
 static void isp_ip_cb(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
 	RASPIRAW_CALLBACK_T *dev = (RASPIRAW_CALLBACK_T*)port->userdata;
@@ -1170,6 +1219,7 @@ int main(int argc, char** argv) {
 	const struct sensor_def *sensor;
 	struct mode_def *sensor_mode = NULL;
 	VCOS_THREAD_T awb_thread;
+	VCOS_THREAD_T processing_thread;
 
 	//Initialise any non-zero config values.
 	cfg.exposure = -1;
@@ -1361,6 +1411,24 @@ int main(int argc, char** argv) {
 	else
 		printf("No AWB\n");
 
+	if (cfg.processing)
+	{
+		VCOS_STATUS_T vcos_status;
+		printf("Setup processing thread\n");
+		vcos_status = vcos_thread_create(&processing_thread, "processing-thread",
+					NULL, processing_thread_task, &dev);
+		if(vcos_status != VCOS_SUCCESS)
+		{
+			printf("Failed to create processing thread\n");
+			return -4;
+		}
+		dev.processing_queue = mmal_queue_create();
+		if (!dev.processing_queue)
+		{
+			printf("Failed to create processing queue\n");
+			return -4;
+		}
+	}
 
 	MMAL_COMPONENT_T *rawcam=NULL, *isp=NULL, *render=NULL;
 	MMAL_STATUS_T status;
@@ -1839,6 +1907,12 @@ component_destroy:
 	{
 		dev.awb_thread_quit = 1;
 		vcos_thread_join(&awb_thread, NULL);
+	}
+
+	if (cfg.processing)
+	{
+		dev.processing_thread_quit = 1;
+		vcos_thread_join(&processing_thread, NULL);
 	}
 
 	if (cfg.write_timestamps)
