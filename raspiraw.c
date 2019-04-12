@@ -26,7 +26,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#define VERSION_STRING "0.0.2"
+#define VERSION_STRING "0.0.3"
 
 #define _GNU_SOURCE
 #include <ctype.h>
@@ -184,6 +184,8 @@ enum {
 	CommandPreview,
 	CommandFullScreen,
 	CommandOpacity,
+	CommandProcessingYUV,
+	CommandOutputYUV,
 };
 
 static COMMAND_LIST cmdline_commands[] =
@@ -222,6 +224,8 @@ static COMMAND_LIST cmdline_commands[] =
 	{ CommandPreview,	"-preview",	"p",  "Preview window settings <'x,y,w,h'>", 1 },
 	{ CommandFullScreen,	"-fullscreen",	"fs", "Fullscreen preview mode", 0 },
 	{ CommandOpacity,	"-opacity",	"op", "Preview window opacity (0-255)", 1},
+	{ CommandProcessingYUV,	"-processing_yuv", "PY",  "Pass processed YUV images into an image processing function", 0 },
+	{ CommandOutputYUV,	"-output_yuv",  "oY", "Set the output filename for YUV data", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -272,6 +276,9 @@ typedef struct {
 	int fullscreen;		// 0 is use previewRect, non-zero to use full screen
 	int opacity;		// Opacity of window - 0 = transparent, 255 = opaque
 	MMAL_RECT_T preview_window;	// Destination rectangle for the preview window.
+	int capture_yuv;
+	char *output_yuv;
+	int processing_yuv;
 } RASPIRAW_PARAMS_T;
 
 typedef struct {
@@ -290,6 +297,19 @@ typedef struct {
         MMAL_QUEUE_T *processing_queue;
         int processing_thread_quit;
 } RASPIRAW_CALLBACK_T;
+
+typedef struct {
+	RASPIRAW_PARAMS_T *cfg;
+
+    MMAL_POOL_T *isp_op_pool;
+    MMAL_PORT_T *isp_output;
+
+    MMAL_POOL_T *vr_ip_pool;
+    MMAL_PORT_T *vr_ip;
+
+    MMAL_QUEUE_T *processing_yuv_queue;
+    int processing_yuv_thread_quit;
+} RASPIRAW_ISP_CALLBACK_T;
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain);
 
@@ -637,6 +657,84 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 	mmal_buffer_header_release(buffer);
 
 	buffers_to_rawcam(dev);
+}
+
+static void buffers_to_isp_op(RASPIRAW_ISP_CALLBACK_T *dev)
+{
+	MMAL_BUFFER_HEADER_T *buffer;
+
+	while ((buffer = mmal_queue_get(dev->isp_op_pool->queue)) != NULL)
+	{
+		mmal_port_send_buffer(dev->isp_output, buffer);
+		//vcos_log_error("Buffer %p to isp op\n", buffer);
+	}
+}
+
+static void yuv_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+{
+	static int count = 0;
+	RASPIRAW_ISP_CALLBACK_T *yuv_cb = (RASPIRAW_ISP_CALLBACK_T*)port->userdata;
+	RASPIRAW_PARAMS_T *cfg = (RASPIRAW_PARAMS_T *)yuv_cb->cfg;
+	MMAL_STATUS_T status;
+
+	//vcos_log_error("Buffer %p returned, filled %d, timestamp %llu, flags %04X", buffer, buffer->length, buffer->pts, buffer->flags);
+	if (cfg->capture_yuv)
+	{
+
+		if (!(buffer->flags&MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) &&
+                    (((count++)%cfg->saverate)==0))
+		{
+			// Save every Nth frame
+			// SD card access is too slow to do much more.
+			FILE *file;
+			char *filename = NULL;
+			if (create_filenames(&filename, cfg->output_yuv, count) == MMAL_SUCCESS)
+			{
+				file = fopen(filename, "wb");
+				if (file)
+				{
+					if (!cfg->write_empty)
+					{
+						fwrite(buffer->user_data, buffer->length, 1, file);
+					}
+					fclose(file);
+				}
+				free(filename);
+			}
+		}
+	}
+
+	/* Pass the buffers off to any other MMAL sinks. */
+	if (buffer->length && !(buffer->flags&MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
+	{
+		if (yuv_cb->vr_ip)
+		{
+			MMAL_BUFFER_HEADER_T *out = mmal_queue_get(yuv_cb->vr_ip_pool->queue);
+			if (out)
+			{
+				//vcos_log_error("replicate buffer %p for vr", buffer);
+				mmal_buffer_header_replicate(out, buffer);
+				out->data = buffer->data;
+				out->alloc_size = buffer->alloc_size;
+				status = mmal_port_send_buffer(yuv_cb->vr_ip, out);
+				if ( status != MMAL_SUCCESS)
+					vcos_log_error("Failed to send buffer %p to video render - %d", buffer, status);
+			}
+		}
+
+		/* Pass to the processing thread */
+		if (yuv_cb->processing_yuv_queue)
+		{
+			/* Relying on the processing thread to release this buffer's refcount */
+			mmal_buffer_header_acquire(buffer);
+			mmal_queue_put(yuv_cb->processing_yuv_queue, buffer);
+			//vcos_log_error("send buffer %p to yuv processing", buffer);
+		}
+	}
+
+	mmal_buffer_header_release(buffer);
+
+	buffers_to_isp_op(yuv_cb);
 }
 
 uint32_t order_and_bit_depth_to_encoding(enum bayer_order order, int bit_depth)
@@ -1026,6 +1124,54 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					i++;
 				break;
 
+			case CommandProcessingYUV:
+				cfg->processing_yuv = 1;
+				break;
+
+			case CommandOutputYUV:  // output filename
+			{
+				len = strlen(argv[i + 1]);
+				if (len)
+				{
+					//We use sprintf to append the frame number for timelapse mode
+					//Ensure that any %<char> is either %% or %d.
+					const char *percent = argv[i+1];
+					while(valid && *percent && (percent=strchr(percent, '%')) != NULL)
+					{
+						int digits=0;
+						percent++;
+						while(isdigit(*percent))
+						{
+							percent++;
+							digits++;
+						}
+						if (!((*percent == '%' && !digits) || *percent == 'd'))
+						{
+							valid = 0;
+							fprintf(stderr, "Filename contains %% characters, but not %%d or %%%% - sorry, will fail\n");
+						}
+						percent++;
+					}
+					cfg->output_yuv = malloc(len + 10); // leave enough space for any timelapse generated changes to filename
+					if (cfg->output_yuv)
+					{
+						strncpy(cfg->output_yuv, argv[i + 1], len+1);
+						i++;
+						cfg->capture_yuv = 1;
+					}
+					else
+					{
+						fprintf(stderr, "internal error - allocation fail\n");
+						valid = 0;
+					}
+
+				}
+				else
+				{
+					valid = 0;
+				}
+				break;
+			}
 
 			default:
 				valid = 0;
@@ -1253,6 +1399,43 @@ static void isp_ip_cb(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 	buffers_to_rawcam(dev);
 }
 
+static void * processing_yuv_thread_task(void *arg)
+{
+	RASPIRAW_ISP_CALLBACK_T *yuv_cb = (RASPIRAW_ISP_CALLBACK_T *)arg;
+	MMAL_BUFFER_HEADER_T *buffer;
+
+	while (!yuv_cb->processing_yuv_thread_quit)
+	{
+		//Being lazy and using a timed wait instead of setting up a
+		//mechanism for skipping this when destroying the thread
+		buffer = mmal_queue_timedwait(yuv_cb->processing_yuv_queue, 1000);
+		if (!buffer)
+			continue;
+		if (!mmal_queue_length(yuv_cb->processing_yuv_queue))
+		{
+			/* If more buffers in the queue, loop so we're working
+			 * on the latest one
+			 */
+			// DO SOME FORM OF PROCESSING ON THE YUV DATA HERE
+			// buffer->user_data points to the data, with buffer->length
+			// being the length of the data.
+		}
+
+		mmal_buffer_header_release(buffer);
+		buffers_to_isp_op(yuv_cb);
+	}
+
+	return NULL;
+}
+
+static void vr_ip_cb(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+{
+	RASPIRAW_ISP_CALLBACK_T *dev = (RASPIRAW_ISP_CALLBACK_T*)port->userdata;
+
+	mmal_buffer_header_release(buffer);
+	buffers_to_isp_op(dev);
+}
+
 int main(int argc, char** argv) {
 	RASPIRAW_PARAMS_T cfg = { 0 };
 	RASPIRAW_CALLBACK_T dev = {
@@ -1260,11 +1443,15 @@ int main(int argc, char** argv) {
 			.rawcam_pool = NULL,
 			.rawcam_output = NULL
 		};
+	RASPIRAW_ISP_CALLBACK_T yuv_cb = {
+			.cfg = &cfg,
+		};
 	uint32_t encoding;
 	const struct sensor_def *sensor;
 	struct mode_def *sensor_mode = NULL;
 	VCOS_THREAD_T awb_thread;
 	VCOS_THREAD_T processing_thread;
+	VCOS_THREAD_T processing_yuv_thread;
 
 	//Initialise any non-zero config values.
 	cfg.exposure = -1;
@@ -1480,8 +1667,7 @@ int main(int argc, char** argv) {
 	MMAL_COMPONENT_T *rawcam=NULL, *isp=NULL, *render=NULL;
 	MMAL_STATUS_T status;
 	MMAL_PORT_T *output = NULL;
-	MMAL_POOL_T *pool = NULL;
-	MMAL_CONNECTION_T *isp_render = NULL;
+	MMAL_POOL_T *pool = NULL, *yuv_pool = NULL;
 	MMAL_PARAMETER_CAMERA_RX_CONFIG_T rx_cfg;
 	MMAL_PARAMETER_CAMERA_RX_TIMING_T rx_timing;
 	unsigned int i;
@@ -1495,6 +1681,13 @@ int main(int argc, char** argv) {
 		vcos_log_error("Failed to create rawcam");
 		return -1;
 	}
+	status = mmal_port_parameter_set_boolean(rawcam->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to set zero copy");
+		goto component_disable;
+	}
+
 
 	status = mmal_component_create("vc.ril.isp", &isp);
 	if (status != MMAL_SUCCESS)
@@ -1502,12 +1695,30 @@ int main(int argc, char** argv) {
 		vcos_log_error("Failed to create isp");
 		goto component_destroy;
 	}
+	status = mmal_port_parameter_set_boolean(isp->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to set zero copy");
+		goto component_disable;
+	}
+	status = mmal_port_parameter_set_boolean(isp->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to set zero copy");
+		goto component_disable;
+	}
 
 	status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &render);
 	if (status != MMAL_SUCCESS)
 	{
 		vcos_log_error("Failed to create render");
 		goto component_destroy;
+	}
+	status = mmal_port_parameter_set_boolean(render->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to set zero copy");
+		goto component_disable;
 	}
 
 	output = rawcam->output[0];
@@ -1736,150 +1947,76 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if (!cfg.no_preview)
+	MMAL_PORT_T *port;
+	port = isp->input[0];
+	status = mmal_format_full_copy(port->format, output->format);
+	if (status != MMAL_SUCCESS)
 	{
-		MMAL_PORT_T *port;
-		port = isp->input[0];
-		status = mmal_format_full_copy(port->format, output->format);
+		vcos_log_error("Failed to copy port format");
+		goto pool_destroy;
+	}
+	status = mmal_port_format_commit(port);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to commit port format on isp input");
+		goto pool_destroy;
+	}
+
+	port->buffer_num = output->buffer_num;
+
+	if (port->buffer_size != output->buffer_size)
+	{
+		vcos_log_error("rawcam output and isp input are different sizes - this could end badly");
+		vcos_log_error("rawcam %u, isp %u", port->buffer_size, output->buffer_size);
+	}
+
+	port = isp->output[0];
+	port->format->es->video.crop.width = sensor_mode->width;
+	port->format->es->video.crop.height = sensor_mode->height;
+	while (port->format->es->video.crop.width > 1920)
+	{
+		//Display can only go up to a certain resolution before underflowing
+		port->format->es->video.crop.width /= 2;
+		port->format->es->video.crop.height /= 2;
+	}
+	port->format->es->video.width = VCOS_ALIGN_UP(port->format->es->video.crop.width, 32);
+	port->format->es->video.height = VCOS_ALIGN_UP(port->format->es->video.crop.height, 16);
+	port->format->encoding = MMAL_ENCODING_I420;
+	port->buffer_num = 6;	//Go for 6 output buffers to give some slack
+	status = mmal_port_format_commit(port);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to commit port format on isp output");
+		goto pool_destroy;
+	}
+
+	if (sensor_mode->black_level)
+	{
+		status = mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL, sensor_mode->black_level);
 		if (status != MMAL_SUCCESS)
 		{
-			vcos_log_error("Failed to copy port format");
-			goto pool_destroy;
+			vcos_log_error("Failed to set black level - try updating firmware");
 		}
-		status = mmal_port_format_commit(port);
+	}
+
+	if (cfg.awb_gains_r && cfg.awb_gains_b)
+	{
+		MMAL_PARAMETER_AWB_GAINS_T param = {{MMAL_PARAMETER_CUSTOM_AWB_GAINS,sizeof(param)}, {0,0}, {0,0}};
+
+		param.r_gain.num = (unsigned int)(cfg.awb_gains_r * 65536);
+		param.b_gain.num = (unsigned int)(cfg.awb_gains_b * 65536);
+		param.r_gain.den = param.b_gain.den = 65536;
+		status = mmal_port_parameter_set(isp->input[0], &param.hdr);
 		if (status != MMAL_SUCCESS)
 		{
-			vcos_log_error("Failed to commit port format on isp input");
-			goto pool_destroy;
-		}
-
-		port->buffer_num = output->buffer_num;
-
-		if (port->buffer_size != output->buffer_size)
-		{
-			vcos_log_error("rawcam output and isp input are different sizes - this could end badly");
-			vcos_log_error("rawcam %u, isp %u", port->buffer_size, output->buffer_size);
-		}
-
-		status = mmal_port_parameter_set_boolean(port, MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-		if (status != MMAL_SUCCESS)
-		{
-			vcos_log_error("Failed to set zero copy on isp input");
-		}
-
-		port = isp->output[0];
-		port->format->es->video.crop.width = sensor_mode->width;
-		port->format->es->video.crop.height = sensor_mode->height;
-		while (port->format->es->video.crop.width > 1920)
-		{
-			//Display can only go up to a certain resolution before underflowing
-			port->format->es->video.crop.width /= 2;
-			port->format->es->video.crop.height /= 2;
-		}
-		port->format->es->video.width = VCOS_ALIGN_UP(port->format->es->video.crop.width, 32);
-		port->format->es->video.height = VCOS_ALIGN_UP(port->format->es->video.crop.height, 16);
-		port->format->encoding = MMAL_ENCODING_I420;
-		status = mmal_port_format_commit(port);
-		if (status != MMAL_SUCCESS)
-		{
-			vcos_log_error("Failed to commit port format on isp output");
-			goto pool_destroy;
-		}
-
-		if (sensor_mode->black_level)
-		{
-			status = mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL, sensor_mode->black_level);
-			if (status != MMAL_SUCCESS)
-			{
-				vcos_log_error("Failed to set black level - try updating firmware");
-			}
-		}
-
-		if (cfg.awb_gains_r && cfg.awb_gains_b)
-		{
-			MMAL_PARAMETER_AWB_GAINS_T param = {{MMAL_PARAMETER_CUSTOM_AWB_GAINS,sizeof(param)}, {0,0}, {0,0}};
-
-			param.r_gain.num = (unsigned int)(cfg.awb_gains_r * 65536);
-			param.b_gain.num = (unsigned int)(cfg.awb_gains_b * 65536);
-			param.r_gain.den = param.b_gain.den = 65536;
-			status = mmal_port_parameter_set(isp->input[0], &param.hdr);
-			if (status != MMAL_SUCCESS)
-			{
-				vcos_log_error("Failed to set white balance");
-			}
-		}
-
-		{
-			MMAL_DISPLAYREGION_T param;
-			param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
-			param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
-
-			param.set = MMAL_DISPLAY_SET_LAYER;
-			param.layer = DEFAULT_PREVIEW_LAYER;
-
-			param.set |= MMAL_DISPLAY_SET_ALPHA;
-			param.alpha = cfg.opacity;
-
-			if (cfg.fullscreen)
-			{
-				param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
-				param.fullscreen = 1;
-			}
-			else
-			{
-				param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
-				param.fullscreen = 0;
-				param.dest_rect = cfg.preview_window;
-			}
-
-			status = mmal_port_parameter_set(render->input[0], &param.hdr);
-
-			if (status != MMAL_SUCCESS && status != MMAL_ENOSYS)
-			{
-				vcos_log_error("unable to set preview port parameters (%u)", status);
-			}
-		}
-
-		status = mmal_connection_create(&isp_render, isp->output[0], render->input[0], MMAL_CONNECTION_FLAG_TUNNELLING);
-		if (status != MMAL_SUCCESS)
-		{
-			vcos_log_error("Failed to create isp->render connection");
-			goto pool_destroy;
-		}
-
-		status = mmal_connection_enable(isp_render);
-		if (status != MMAL_SUCCESS)
-		{
-			vcos_log_error("Failed to enable isp->render connection");
-			goto pool_destroy;
-		}
-
-		vcos_log_error("Create pool of %d buffers of size %d", isp->input[0]->buffer_num, isp->input[0]->buffer_size);
-		dev.isp_ip_pool = mmal_port_pool_create(isp->input[0], isp->input[0]->buffer_num, 0);
-		if (!dev.isp_ip_pool)
-		{
-			vcos_log_error("Failed to create isp_ip_pool");
-			goto component_disable;
-		}
-		dev.isp_ip = isp->input[0];
-
-		isp->input[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&dev;
-		status = mmal_port_enable(isp->input[0], isp_ip_cb);
-		if (status != MMAL_SUCCESS)
-		{
-			vcos_log_error("Failed to enable isp ip port");
-			goto pool_destroy;
+			vcos_log_error("Failed to set white balance");
 		}
 	}
 
 	/* Set up the rawcam output callback */
-	status = mmal_port_parameter_set_boolean(output, MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-	if (status != MMAL_SUCCESS)
-	{
-		vcos_log_error("Failed to set zero copy");
-		goto component_disable;
-	}
 
+	//Create buffer headers for rawcam to isp/awb/raw processing
+	//Rawcam output.
 	//Need to manually create the pool so that we have control over mem handles,
 	//not letting MMAL core handle the magic.
 	vcos_log_error("Create pool of %d buffers of size %d", output->buffer_num, output->buffer_size);
@@ -1917,9 +2054,156 @@ int main(int argc, char** argv) {
 		}
 		mmal_buffer_header_release(buffer);
 	}
-
 	dev.rawcam_output = rawcam->output[0];
 	dev.rawcam_pool = pool;
+
+	//ISP input
+	vcos_log_error("Create pool of %d buffers of size %d", isp->input[0]->buffer_num, isp->input[0]->buffer_size);
+	dev.isp_ip_pool = mmal_port_pool_create(isp->input[0], isp->input[0]->buffer_num, 0);
+	if (!dev.isp_ip_pool)
+	{
+		vcos_log_error("Failed to create isp_ip_pool");
+		goto component_disable;
+	}
+	dev.isp_ip = isp->input[0];
+
+	isp->input[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&dev;
+	status = mmal_port_enable(isp->input[0], isp_ip_cb);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to enable isp ip port");
+		goto pool_destroy;
+	}
+
+
+	//Set up YUV/RGB processing outputs
+	yuv_pool = mmal_port_pool_create(isp->output[0], isp->output[0]->buffer_num, 0);
+	if (!yuv_pool)
+	{
+		vcos_log_error("Failed to create yuv pool");
+		goto component_disable;
+	}
+	for (i=0; i<isp->output[0]->buffer_num; i++)
+	{
+		MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(yuv_pool->queue);
+		if (!buffer)
+			vcos_log_error("Where did my buffer go?");
+		else
+		{
+			unsigned int vcsm_handle = vcsm_malloc_cache(isp->output[0]->buffer_size, VCSM_CACHE_TYPE_HOST, "mmal_vc_port buffer");
+			unsigned int vc_handle = vcsm_vc_hdl_from_hdl(vcsm_handle);
+			uint8_t *mem = (uint8_t *)vcsm_lock( vcsm_handle );
+			if (!mem || !vc_handle)
+			{
+				LOG_ERROR("could not allocate %i bytes of shared memory (handle %x)",
+				        (int)isp->output[0]->buffer_size, vcsm_handle);
+				if (mem)
+					vcsm_unlock_hdl(vcsm_handle);
+				if (vcsm_handle)
+					vcsm_free(vcsm_handle);
+			}
+			else
+			{
+				buffer->data = (void*)vc_handle;
+				buffer->alloc_size = isp->output[0]->buffer_size;
+				buffer->user_data = mem;
+			}
+		}
+		mmal_buffer_header_release(buffer);
+	}
+	isp->output[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&yuv_cb;
+	status = mmal_port_enable(isp->output[0], yuv_callback);
+	if (status != MMAL_SUCCESS)
+	{
+		vcos_log_error("Failed to enable isp op port");
+		goto pool_destroy;
+	}
+	yuv_cb.isp_output = isp->output[0];
+	yuv_cb.isp_op_pool = yuv_pool;
+
+	if (!cfg.no_preview)
+	{
+		MMAL_DISPLAYREGION_T param;
+		param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
+		param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
+
+		param.set = MMAL_DISPLAY_SET_LAYER;
+		param.layer = DEFAULT_PREVIEW_LAYER;
+
+		param.set |= MMAL_DISPLAY_SET_ALPHA;
+		param.alpha = cfg.opacity;
+
+		if (cfg.fullscreen)
+		{
+			param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
+			param.fullscreen = 1;
+		}
+		else
+		{
+			param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
+			param.fullscreen = 0;
+			param.dest_rect = cfg.preview_window;
+		}
+
+		status = mmal_port_parameter_set(render->input[0], &param.hdr);
+
+		if (status != MMAL_SUCCESS && status != MMAL_ENOSYS)
+		{
+			vcos_log_error("unable to set preview port parameters (%u)", status);
+		}
+
+		status = mmal_format_full_copy(render->input[0]->format, isp->output[0]->format);
+		if (status != MMAL_SUCCESS)
+		{
+			vcos_log_error("Failed to copy port format - isp to render");
+			goto pool_destroy;
+		}
+		status = mmal_port_format_commit(render->input[0]);
+		if (status != MMAL_SUCCESS)
+		{
+			vcos_log_error("Failed to commit port format on render input");
+			goto pool_destroy;
+		}
+
+		render->input[0]->buffer_num = isp->output[0]->buffer_num;
+
+
+		yuv_cb.vr_ip_pool = mmal_port_pool_create(render->input[0], render->input[0]->buffer_num, 0);
+		if (!yuv_cb.vr_ip_pool)
+		{
+			vcos_log_error("Failed to create vr_ip_pool");
+			goto component_disable;
+		}
+		yuv_cb.vr_ip = render->input[0];
+
+		render->input[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&yuv_cb;
+
+		status = mmal_port_enable(render->input[0], vr_ip_cb);
+		if (status != MMAL_SUCCESS)
+		{
+			vcos_log_error("Failed to enable vr ip port");
+			goto pool_destroy;
+		}
+
+	}
+	if (cfg.processing_yuv)
+	{
+		VCOS_STATUS_T vcos_status;
+		printf("Setup processing thread\n");
+		vcos_status = vcos_thread_create(&processing_yuv_thread, "processing-yuv-thread",
+					NULL, processing_yuv_thread_task, &yuv_cb);
+		if(vcos_status != VCOS_SUCCESS)
+		{
+			printf("Failed to create processing yuv thread\n");
+			return -4;
+		}
+		yuv_cb.processing_yuv_queue = mmal_queue_create();
+		if (!yuv_cb.processing_yuv_queue)
+		{
+			printf("Failed to create processing yuv queue\n");
+			return -4;
+		}
+	}
 
 	output->userdata = (struct MMAL_PORT_USERDATA_T *)&dev;
 	status = mmal_port_enable(output, callback);
@@ -1930,6 +2214,7 @@ int main(int argc, char** argv) {
 	}
 
 	buffers_to_rawcam(&dev);
+	buffers_to_isp_op(&yuv_cb);
 
 	start_camera_streaming(sensor, sensor_mode);
 
@@ -1950,11 +2235,6 @@ port_disable:
 pool_destroy:
 	if (pool)
 		mmal_port_pool_destroy(output, pool);
-	if (isp_render)
-	{
-		mmal_connection_disable(isp_render);
-		mmal_connection_destroy(isp_render);
-	}
 component_disable:
 	if (brcm_header)
 		free(brcm_header);
