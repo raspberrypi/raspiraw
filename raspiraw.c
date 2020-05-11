@@ -100,6 +100,8 @@ struct mode_def
 struct sensor_def
 {
 	char *name;
+	struct sensor_regs *common_init;
+	int num_common_init;
 	struct mode_def *modes;
 	int num_modes;
 	struct sensor_regs *stop;
@@ -139,11 +141,13 @@ struct sensor_def
 #include "ov5647_modes.h"
 #include "imx219_modes.h"
 #include "adv7282m_modes.h"
+#include "imx477_modes.h"
 
 const struct sensor_def *sensors[] = {
 	&ov5647,
 	&imx219,
 	&adv7282,
+	&imx477,
 	NULL
 };
 
@@ -451,6 +455,8 @@ void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mo
 		vcos_log_error("Failed to set I2C address");
 		return;
 	}
+	if (sensor->common_init)
+		send_regs(fd, sensor, sensor->common_init, sensor->num_common_init);
 	send_regs(fd, sensor, mode->regs, mode->num_regs);
 	close(fd);
 	vcos_log_error("Now streaming...");
