@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct sensor_regs imx477_common_init[] =
 {
+      {0x0100, 0x00},
       {0x0136, 0x18},
       {0x0137, 0x00},
       {0xe000, 0x00},
@@ -449,6 +450,14 @@ struct sensor_regs imx477_4056x3040_regs[] = {
       {0x3f50, 0x00},
       {0x3f56, 0x02},
       {0x3f57, 0xae},
+      {0x0101, 0x00},
+      {0x0202, 0x0b},
+      {0x0203, 0x80},
+      {0x0204, 0x00},
+      {0x0205, 0x00},
+      {0x0340, 0x0c},
+      {0x0341, 0x00},
+      {0x0100, 0x01},
 };
 
 /* 2x2 binned. 40fps */
@@ -550,6 +559,14 @@ struct sensor_regs imx477_2028x1520_regs[] = {
       {0x3f50, 0x00},
       {0x3f56, 0x01},
       {0x3f57, 0x6c},
+      {0x0101, 0x00},
+      {0x0202, 0x05},
+      {0x0203, 0xf0},
+      {0x0204, 0x00},
+      {0x0205, 0x00},
+      {0x0340, 0x06},
+      {0x0341, 0x20},
+      {0x0100, 0x01},
 };
 
 /* 1080p cropped mode */
@@ -651,7 +668,14 @@ struct sensor_regs imx477_2028x1080_regs[] = {
       {0x3f50, 0x00},
       {0x3f56, 0x01},
       {0x3f57, 0x6c},
-      {0xffff, 0x00}
+      {0x0101, 0x00},
+      {0x0202, 0x04},
+      {0x0203, 0x40},
+      {0x0204, 0x00},
+      {0x0205, 0x00},
+      {0x0340, 0x04},
+      {0x0341, 0x6e},
+      {0x0100, 0x01},
 };
 
 /* 4x4 binned. 120fps */
@@ -770,7 +794,7 @@ struct sensor_regs imx477_1012x760_regs[] = {
       {0x0817, 0xe7},
       {0x0818, 0x00},
       {0x0819, 0x2f},
-      {0xe04c, 0x00},   
+      {0xe04c, 0x00},
       {0xe04d, 0x5f},
       {0xe04e, 0x00},
       {0xe04f, 0x1f},
@@ -779,17 +803,81 @@ struct sensor_regs imx477_1012x760_regs[] = {
       {0x3f50, 0x00},
       {0x3f56, 0x00},
       {0x3f57, 0x96},
+      {0x0101, 0x00},
+      {0x0202, 0x03},
+      {0x0203, 0x00},
+      {0x0204, 0x00},
+      {0x0205, 0x00},
+      {0x0340, 0x03},
+      {0x0341, 0x2e},
+      {0x0100, 0x01},
 };
 
 struct mode_def imx477_modes[] = {
-   { imx477_4056x3040_regs, NUM_ELEMENTS(imx477_4056x3040_regs),
-                  4056, 3040, 0, BAYER_ORDER_BGGR, 12, 0x2C, 2, 0 },
-   { imx477_2028x1520_regs, NUM_ELEMENTS(imx477_2028x1520_regs),
-                  4056, 3040, 0, BAYER_ORDER_BGGR, 12, 0x2C, 2, 0 },
-   { imx477_2028x1080_regs, NUM_ELEMENTS(imx477_2028x1080_regs),
-                  4056, 3040, 0, BAYER_ORDER_BGGR, 12, 0x2C, 2, 0 },
-   { imx477_1012x760_regs, NUM_ELEMENTS(imx477_1012x760_regs),
-                  4056, 3040, 0, BAYER_ORDER_BGGR, 10, 0x2B, 2, 0 },
+   {
+      .regs          = imx477_4056x3040_regs,
+      .num_regs      = NUM_ELEMENTS(imx477_4056x3040_regs),
+      .width         = 4056,
+      .height        = 3040,
+      .encoding      = 0,
+      .order         = BAYER_ORDER_RGGB,
+      .native_bit_depth = 12,
+      .image_id      = 0x2C,
+      .data_lanes    = 2,
+      .min_vts       = 3072,
+      .line_time_ns  = 0x5dc0,
+      .timing        = {0, 0, 0, 0, 0},
+      .term          = {0, 0},
+      .black_level   = 256,
+   },
+   {
+      .regs          = imx477_2028x1520_regs,
+      .num_regs      = NUM_ELEMENTS(imx477_2028x1520_regs),
+      .width         = 2028,
+      .height        = 1520,
+      .encoding      = 0,
+      .order         = BAYER_ORDER_RGGB,
+      .native_bit_depth = 12,
+      .image_id      = 0x2C,
+      .data_lanes    = 2,
+      .min_vts       = 1568,
+      .line_time_ns  = 0x31c4,
+      .timing        = {0, 0, 0, 0, 0},
+      .term          = {0, 0},
+      .black_level   = 256,
+   },
+   {
+      .regs          = imx477_2028x1080_regs,
+      .num_regs      = NUM_ELEMENTS(imx477_2028x1080_regs),
+      .width         = 2028,
+      .height        = 1080,
+      .encoding      = 0,
+      .order         = BAYER_ORDER_RGGB,
+      .native_bit_depth = 12,
+      .image_id      = 0x2C,
+      .data_lanes    = 2,
+      .min_vts       = 1134,
+      .line_time_ns  = 0x31c4,
+      .timing        = {0, 0, 0, 0, 0},
+      .term          = {0, 0},
+      .black_level   = 256,
+   },
+   {
+      .regs          = imx477_1012x760_regs,
+      .num_regs      = NUM_ELEMENTS(imx477_1012x760_regs),
+      .width         = 1012,
+      .height        = 760,
+      .encoding      = 0,
+      .order         = BAYER_ORDER_RGGB,
+      .native_bit_depth = 10,
+      .image_id      = 0x2B,
+      .data_lanes    = 2,
+      .min_vts       = 814,
+      .line_time_ns  = 0x1460,
+      .timing        = {0, 0, 0, 0, 0},
+      .term          = {0, 0},
+      .black_level   = 64,
+   },
 };
 
 struct sensor_regs imx477_stop[] = {
@@ -810,7 +898,7 @@ struct sensor_def imx477 = {
       .i2c_addressing =       2,
       .i2c_ident_length =     2,
       .i2c_ident_reg =        0x0016,
-      .i2c_ident_value =      0x7803,     //Bytes reversed
+      .i2c_ident_value =      0x7704,     //Bytes reversed
 
       .vflip_reg =            0x0101,
       .vflip_reg_bit =        1,
