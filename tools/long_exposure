@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ "$1" = "" ]; then echo "format: `basename $0` us [#frames]"; exit; fi
+if [ "$2" = "" ]; then frames=1; else frames=$2; fi
+
+r=`uname -r | head --bytes 1`
+if [ "$r" = "4" ]; then i2c=0; else i2c=10; fi
+
+echo "removing /dev/shm/out.*.raw"
+rm -f /dev/shm/out.*.raw
+touch /dev/shm/out.0000.raw
+
+raspiraw -md 3 --expus $1 -y $i2c -vf -hf -t $(( 1500 + ( $frames * $1 ) / 1000 )) -ts tstamps.dirty -hd0 hd0.32k -sr 1 -o /dev/shm/out.%04d.raw  2>/dev/null >/dev/null

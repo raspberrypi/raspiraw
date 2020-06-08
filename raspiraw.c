@@ -2371,6 +2371,20 @@ void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hfl
 
 	if (sensor->exposure_reg && exposure != -1)
 	{
+		if (strcmp(sensor->name, "imx477") == 0 &&
+			mode->width == 4056 &&
+			exposure <= 128*65535)
+		{
+			uint16_t shift_reg = 0x3100;
+			int shr = 0;
+			while (exposure > 65535)
+			{
+				++shr;
+				exposure /= 2;
+			}
+			modReg(mode, shift_reg, 0, 2, shr, EQUAL);
+                }
+
 		if (exposure < 0 || exposure >= (1<<sensor->exposure_reg_num_bits))
 		{
 			vcos_log_error("Invalid exposure:%d, exposure range is 0 to %u!\n",
