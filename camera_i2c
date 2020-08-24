@@ -6,6 +6,7 @@
 
 # http://elinux.org/RPi_HardwareHistory#Board_Revision_History
 rev=`cat /proc/cpuinfo | grep Revision | awk '{print substr($NF,length($NF)-5,6)}'`
+
 echo "setting GPIO for board revsion: $rev"
 
 case $rev in
@@ -91,8 +92,8 @@ raspi-gpio set 2 out
 raspi-gpio set 2 dh
 ;;
 
-'a02082'|'a22082'|'a020d3'|'9020e0'|'a03111'|'b03111'|'c03111'|'a03112'|'b03112'|'c03112')
-echo "Raspberry Pi3B / Pi3B+ / 3A / 4B(1G/2G/4G)"
+'a02082'|'a22082'|'a020d3'|'9020e0')
+echo "Raspberry Pi3B / Pi3B+ / 3A"
 # https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
 # Pins 44&45 Alt1=i2c0, alt2=i2c1
 # i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
@@ -100,6 +101,28 @@ raspi-gpio set 0 ip
 raspi-gpio set 1 ip
 raspi-gpio set 28 ip
 raspi-gpio set 29 ip
+# i2c on these pins
+raspi-gpio set 44 ip
+raspi-gpio set 44 a1
+raspi-gpio set 45 ip
+raspi-gpio set 45 a1
+#shutdown
+# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
+#raspi-gpio set 41 1
+./rpi3-gpiovirtbuf s 133 1
+#LED
+#raspi-gpio set 32 1
+i2cdetect -y 0
+;;
+
+'a03111'|'b03111'|'c03111'|'a03112'|'b03112'|'c03112')
+echo "4B(1G/2G/4G)"
+# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
+# Pins 44&45 Alt1=i2c0, alt2=i2c1
+# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
+# Do NOT alter 28&29 as they are used by the ethernet PHY.
+raspi-gpio set 0 ip
+raspi-gpio set 1 ip
 # i2c on these pins
 raspi-gpio set 44 ip
 raspi-gpio set 44 a1
