@@ -2,26 +2,35 @@
 
 if [ "$1" = "" ]; then echo "format: `basename $0` ms"; exit; fi
 
+hd () {
+  echo -n $1 | sed "s/\(.\)/\1\xa/g" > /tmp/n
+  local l=`echo -n $1 | wc --bytes`
+  echo -n `head -n $(($l-2)) /tmp/n` | sed "s/ //g"
+  echo -n .`tail -n -2 /tmp/n` | sed "s/ //g"
+}
+
 r=`uname -r | head --bytes 1`
 if [ "$r" = "4" ]; then i2c=0; else i2c=10; fi
 
 echo "removing /dev/shm/out.*.raw"
 rm -f /dev/shm/out.*.raw
 
-if [ "$2" = "" ]; then fps=11; else fps=$2; fi
+if [ "$2" = "" ]; then fps=11.38; else fps=$2; fi
 echo "capturing frames for ${1}ms with ${fps}fps requested"
-raspiraw -md 3 -y $i2c -vf -hf -t $1 -ts tstamps.dirty -hd0 hd0.32k -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
+raspiraw -md 3 -y $i2c -vf -hf -t $1 --fps $fps -ts tstamps.dirty -hd0 hd0.32k -sr 1 -o /dev/shm/out.%04d.raw 2>/dev/null >/dev/null
 
 grep -v ",0$" tstamps.dirty | grep -v ",-[0-9]*$" > tstamps.csv
 
 us=`cut -f1 -d, tstamps.csv | sort -n | uniq -c | sort -n | tail -1 | cut -b9-`
 l=`wc --lines tstamps.csv | cut -f1 -d\ `
-echo -e "$l frames were captured\nmajority framerate $((1000000 / $us))fps" 
+echo -en "$l frames were captured\nmajority framerate "
+hd $((100000000 / $us))
+echo "fps" 
 
 echo "frame delta time[us] distribution"
 cut -f1 -d, tstamps.csv | sort -n | uniq -c
 
-D=`echo "0123456789" | sed "s/\`echo $((1000000/$fps)) | cut -b1\`//"`
+D=`echo "0123456789" | sed "s/\`echo $us | cut -b1\`//"`
 
 echo "after skip frame indices (middle column)"
 grep "^[$D]" tstamps.csv | sed "s/^/> /"
@@ -35,5 +44,7 @@ fst=`head -1 tstamps.csv | cut -f3 -d,`
 lst=`tail -1 tstamps.csv | cut -f3 -d,`
 dif=`expr $lst - $fst`
 dif2=`expr $dif / 2`
-avg=`expr \( 1000000 \* \( $l - 1 \) + $dif2 \) / $dif`
-echo "average framerate ${avg}fps"
+avg=`expr \( 100000000 \* \( $l - 1 \) + $dif2 \) / $dif`
+echo -n "average framerate "
+hd ${avg}
+echo "fps"
