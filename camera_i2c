@@ -5,19 +5,24 @@
 # Broadcom GPIO numbers used here
 
 # http://elinux.org/RPi_HardwareHistory#Board_Revision_History
+
 rev=`cat /proc/cpuinfo | grep Revision | awk '{print substr($NF,length($NF)-5,6)}'`
+kernel=`uname -r  | head --bytes 1`
 
 echo "setting GPIO for board revsion: $rev"
 
 case $rev in
-
+# Old revision code encodings first
 '0002'|'0003')
 echo "B Rev1 - I2C 1 on GPIOs 2 & 3. GPIOs 5 & 27 for LED and power"
-# i2c on these pins
-raspi-gpio set 0 ip
-raspi-gpio set 0 a0
-raspi-gpio set 1 ip
-raspi-gpio set 1 a0
+if [ "$r" = "4" ]
+then
+	# i2c on these pins
+	raspi-gpio set 0 ip
+	raspi-gpio set 0 a0
+	raspi-gpio set 1 ip
+	raspi-gpio set 1 a0
+fi
 #shutdown
 raspi-gpio set 27 op dh
 #LED
@@ -29,61 +34,54 @@ echo "Use 'raspiraw -y 1' to communicate with the sensor"
 '0004'|'0005'|'0006'|'000d'|'000e'|'000f')
 echo "B Rev2 - I2C 0 on GPIOs 0 & 1. GPIOs 5 & 21 for LED and power"
 # i2c on these pins
-raspi-gpio set 0 ip
-raspi-gpio set 0 a0
-raspi-gpio set 1 ip
-raspi-gpio set 1 a0
+if [ "$r" = "4" ]
+then
+	raspi-gpio set 0 ip
+	raspi-gpio set 0 a0
+	raspi-gpio set 1 ip
+	raspi-gpio set 1 a0
+fi
 #shutdown
 raspi-gpio set 21 dh
 #LED
 raspi-gpio set 5 dh
 ;;
 
-'0010'|'0012'|'0013'|'1041'|'a01041'|'a21041'|'a02042'|'900093'|'920093')
+'0010'|'0012'|'0013'|'1041')
 echo "A+, B+, B2, B2 (2837), and Zero (not W) all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
-# i2c can be on pins 0 and 1, so make sure they are not set to alt0
-raspi-gpio set 0 ip
-raspi-gpio set 1 ip
-# i2c on these pins
-raspi-gpio set 28 ip
-raspi-gpio set 28 a0
-raspi-gpio set 29 ip
-raspi-gpio set 29 a0
+if [ "$r" = "4" ]
+then
+	# i2c can be on pins 0 and 1, so make sure they are not set to alt0
+	raspi-gpio set 0 ip
+	raspi-gpio set 1 ip
+	# i2c on these pins
+	raspi-gpio set 28 ip
+	raspi-gpio set 28 a0
+	raspi-gpio set 29 ip
+	raspi-gpio set 29 a0
+fi
 #shutdown
 raspi-gpio set 41 dh
 #LED
 raspi-gpio set 32 dh
 ;;
 
-'9000c1')
-echo "PiZero W - I2C 0 on GPIO 28 & 29. GPIOs 40 & 44 for LED and power"
-# i2c can be on pins 0 and 1, so make sure they are not set to alt0
-raspi-gpio set 0 ip
-raspi-gpio set 1 ip
-# i2c on these pins
-raspi-gpio set 28 ip
-raspi-gpio set 28 a0
-raspi-gpio set 29 ip
-raspi-gpio set 29 a0
-# shutdown
-raspi-gpio set 44 dh
-# LED
-raspi-gpio set 40 dh
-;;
-
-'0011'|'0014'|'a020a0')
+'0011'|'0014')
 echo "Compute Module/ CM3 - I2C 0 on GPIO 0 & 1. GPIOs 2 & 3 for LED and power"
 echo "Warning: This is just a default setting for cam1."
 echo "Download dt-blob.bin from https://www.raspberrypi.org/documentation/hardware/computemodule/dt-blob-cam1.bin and place it in /boot/."
 echo "For cable connection, see https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md"
-# i2c can be on pins 28 and 29, so make sure they are not set to alt0
-raspi-gpio set 28 ip
-raspi-gpio set 29 ip
-# i2c on these pins
-raspi-gpio set 0 ip
-raspi-gpio set 0 a0
-raspi-gpio set 1 ip
-raspi-gpio set 1 a0
+if [ "$r" = "4" ]
+then
+	# i2c can be on pins 28 and 29, so make sure they are not set to alt0
+	raspi-gpio set 28 ip
+	raspi-gpio set 29 ip
+	# i2c on these pins
+	raspi-gpio set 0 ip
+	raspi-gpio set 0 a0
+	raspi-gpio set 1 ip
+	raspi-gpio set 1 a0
+fi
 # shutdown
 raspi-gpio set 3 out
 raspi-gpio set 3 dh
@@ -92,52 +90,168 @@ raspi-gpio set 2 out
 raspi-gpio set 2 dh
 ;;
 
-'a02082'|'a22082'|'a020d3'|'9020e0')
-echo "Raspberry Pi3B / Pi3B+ / 3A"
-# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
-# Pins 44&45 Alt1=i2c0, alt2=i2c1
-# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
-raspi-gpio set 0 ip
-raspi-gpio set 1 ip
-raspi-gpio set 28 ip
-raspi-gpio set 29 ip
-# i2c on these pins
-raspi-gpio set 44 ip
-raspi-gpio set 44 a1
-raspi-gpio set 45 ip
-raspi-gpio set 45 a1
-#shutdown
-# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
-#raspi-gpio set 41 1
-./rpi3-gpiovirtbuf s 133 1
-#LED
-#raspi-gpio set 32 1
-i2cdetect -y 0
-;;
-
-'a03111'|'b03111'|'c03111'|'a03112'|'b03112'|'c03112'|'d03114')
-echo "4B(1G/2G/4G/8G)"
-# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
-# Pins 44&45 Alt1=i2c0, alt2=i2c1
-# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
-# Do NOT alter 28&29 as they are used by the ethernet PHY.
-raspi-gpio set 0 ip
-raspi-gpio set 1 ip
-# i2c on these pins
-raspi-gpio set 44 ip
-raspi-gpio set 44 a1
-raspi-gpio set 45 ip
-raspi-gpio set 45 a1
-#shutdown
-# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
-#raspi-gpio set 41 1
-./rpi3-gpiovirtbuf s 133 1
-#LED
-#raspi-gpio set 32 1
-i2cdetect -y 0
-;;
-
 *)
-echo "Failed: don't know how to set GPIO for this board!"
+	# New format revision encodings
+	board_type=`cat /proc/cpuinfo | grep Revision | awk '{print substr($NF,length($NF)-2,2)}'`
+
+	case $board_type in
+	'02'|'03'|'04'|'09')
+	echo "A+, B+, B2, B2 (2837), and Zero (not W) all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
+	if [ "$r" = "4" ]
+	then
+		# i2c can be on pins 0 and 1, so make sure they are not set to alt0
+		raspi-gpio set 0 ip
+		raspi-gpio set 1 ip
+		# i2c on these pins
+		raspi-gpio set 28 ip
+		raspi-gpio set 28 a0
+		raspi-gpio set 29 ip
+		raspi-gpio set 29 a0
+	fi
+	#shutdown
+	raspi-gpio set 41 dh
+	#LED
+	raspi-gpio set 32 dh
+	;;
+
+	'0c')
+	echo "PiZero W - I2C 0 on GPIO 28 & 29. GPIOs 40 & 44 for LED and power"
+	if [ "$r" = "4" ]
+	then
+		# i2c can be on pins 0 and 1, so make sure they are not set to alt0
+		raspi-gpio set 0 ip
+		raspi-gpio set 1 ip
+		# i2c on these pins
+		raspi-gpio set 28 ip
+		raspi-gpio set 28 a0
+		raspi-gpio set 29 ip
+		raspi-gpio set 29 a0
+	fi
+	# shutdown
+	raspi-gpio set 44 dh
+	# LED
+	raspi-gpio set 40 dh
+	;;
+
+	'0a')
+	echo "Compute Module/ CM3 - I2C 0 on GPIO 0 & 1. GPIOs 2 & 3 for LED and power"
+	echo "Warning: This is just a default setting for cam1."
+	echo "Download dt-blob.bin from https://www.raspberrypi.org/documentation/hardware/computemodule/dt-blob-cam1.bin and place it in /boot/."
+	echo "For cable connection, see https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md"
+	if [ "$r" = "4" ]
+	then
+		# i2c can be on pins 28 and 29, so make sure they are not set to alt0
+		raspi-gpio set 28 ip
+		raspi-gpio set 29 ip
+		# i2c on these pins
+		raspi-gpio set 0 ip
+		raspi-gpio set 0 a0
+		raspi-gpio set 1 ip
+		raspi-gpio set 1 a0
+	fi
+	# shutdown
+	raspi-gpio set 3 out
+	raspi-gpio set 3 dh
+	# LED
+	raspi-gpio set 2 out
+	raspi-gpio set 2 dh
+	;;
+
+	'08'|'0d'|'0e')
+	echo "Raspberry Pi3B / Pi3B+ / 3A"
+	# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
+	# Pins 44&45 Alt1=i2c0, alt2=i2c1
+	if [ "$r" = "4" ]
+	then
+		# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
+		raspi-gpio set 0 ip
+		raspi-gpio set 1 ip
+		raspi-gpio set 28 ip
+		raspi-gpio set 29 ip
+		# i2c on these pins
+		raspi-gpio set 44 ip
+		raspi-gpio set 44 a1
+		raspi-gpio set 45 ip
+		raspi-gpio set 45 a1
+	fi
+	#shutdown
+	# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
+	#raspi-gpio set 41 1
+	./rpi3-gpiovirtbuf s 133 1
+	#LED
+	#raspi-gpio set 32 1
+	if [ "$r" = "4" ]
+	then
+		i2cdetect -y 0
+	else
+		i2cdetect -y 10
+	fi
+	;;
+
+	'11')
+	echo "4B(1G/2G/4G/8G)"
+	# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
+	# Pins 44&45 Alt1=i2c0, alt2=i2c1
+	# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
+	if [ "$r" = "4" ]
+	then
+		# Do NOT alter 28&29 as they are used by the ethernet PHY.
+		raspi-gpio set 0 ip
+		raspi-gpio set 1 ip
+		# i2c on these pins
+		raspi-gpio set 44 ip
+		raspi-gpio set 44 a1
+		raspi-gpio set 45 ip
+		raspi-gpio set 45 a1
+	fi
+	#shutdown
+	# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
+	#raspi-gpio set 41 1
+	./rpi3-gpiovirtbuf s 133 1
+	#LED
+	#raspi-gpio set 32 1
+	if [ "$r" = "4" ]
+	then
+		i2cdetect -y 0
+	else
+		i2cdetect -y 10
+	fi
+	;;
+
+	'13')
+	# Pi400
+	echo "Failed: Pi400 doesn't have a camera connector"
+	;;
+
+	'14')
+	# CM4
+	echo "CM4 - assume CAM1 on 44&45"
+	if [ "$r" = "4" ]
+	then
+		# i2c can be on pins 44 and 45, so make sure they are not set to alt0
+		raspi-gpio set 44 ip
+		raspi-gpio set 45 ip
+		# i2c on these pins
+		raspi-gpio set 0 ip
+		raspi-gpio set 0 a0
+		raspi-gpio set 1 ip
+		raspi-gpio set 1 a0
+	fi
+	# shutdown
+	./rpi3-gpiovirtbuf s 133 1
+	;;
+
+	*)
+	echo "Failed: don't know how to set GPIO for this board! Type is $board_type"
+	;;
+
+	esac
 ;;
 esac
+
+if [ "$r" = "4" ]
+then
+	echo "Use i2c-0 for the sensor (-y 0)"
+else
+	echo "Use i2c-10 for the sensor (-y 10)"
+fi
