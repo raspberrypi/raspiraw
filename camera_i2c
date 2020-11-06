@@ -115,8 +115,8 @@ raspi-gpio set 45 a1
 i2cdetect -y 0
 ;;
 
-'a03111'|'b03111'|'c03111'|'a03112'|'b03112'|'c03112')
-echo "4B(1G/2G/4G)"
+'a03111'|'b03111'|'c03111'|'a03112'|'b03112'|'c03112'|'d03114')
+echo "4B(1G/2G/4G/8G)"
 # https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
 # Pins 44&45 Alt1=i2c0, alt2=i2c1
 # i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
