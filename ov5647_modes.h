@@ -850,6 +850,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 1,
    },
    {
       .regs          = ov5647_mode1,
@@ -866,6 +867,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 1,
    },
    {
       .regs          = ov5647_mode2,
@@ -882,6 +884,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 1,
    },
    {
       .regs          = ov5647_mode3,
@@ -898,6 +901,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 1,
    },
    {
       .regs          = ov5647_mode4,
@@ -914,6 +918,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 2,
    },
    {
       .regs          = ov5647_mode5,
@@ -930,6 +935,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 2,
    },
    {
       .regs          = ov5647_mode6,
@@ -946,6 +952,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 4,
    },
    {
       .regs          = ov5647_mode7,
@@ -962,6 +969,7 @@ struct mode_def ov5647_modes[] = {
       .timing        = {0, 0, 0, 0, 0},
       .term          = {0, 0},
       .black_level   = 16,
+      .binning       = 4,
    },
 };
 
@@ -970,6 +978,51 @@ struct mode_def ov5647_modes[] = {
 struct sensor_regs ov5647_stop[] = {
    { 0x0100, 0x00 },
 };
+
+static
+int ov5647_set_crop(const struct sensor_def *sensor, struct mode_def *sensor_mode,
+                    const struct raspiraw_crop *cfg)
+{
+   if (cfg->hinc >= 0)
+   {
+      modReg(sensor_mode, 0x3814, 0, 7, cfg->hinc, EQUAL);
+   }
+
+   if (cfg->vinc >= 0)
+   {
+      modReg(sensor_mode, 0x3815, 0, 7, cfg->vinc, EQUAL);
+   }
+
+   if (cfg->width > 0)
+   {
+      sensor_mode->width = cfg->width;
+      modReg(sensor_mode, 0x3808, 0, 3, cfg->width >>8, EQUAL);
+      modReg(sensor_mode, 0x3809, 0, 7, cfg->width &0xFF, EQUAL);
+   }
+
+   if (cfg->height > 0)
+   {
+      sensor_mode->height = cfg->height;
+      modReg(sensor_mode, 0x380A, 0, 3, cfg->height >>8, EQUAL);
+      modReg(sensor_mode, 0x380B, 0, 7, cfg->height &0xFF, EQUAL);
+   }
+
+   if (cfg->left > 0)
+   {
+      int val = cfg->left * sensor_mode->binning;
+      modReg(sensor_mode, 0x3800, 0, 3, val >>8, EQUAL);
+      modReg(sensor_mode, 0x3801, 0, 7, val &0xFF, EQUAL);
+   }
+
+   if (cfg->top > 0)
+   {
+      int val = cfg->top * sensor_mode->binning;
+      modReg(sensor_mode, 0x3802, 0, 3, val >>8, EQUAL);
+      modReg(sensor_mode, 0x3803, 0, 7, val &0xFF, EQUAL);
+   }
+
+   return 0;
+}
 
 // ID register settings taken from http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1298623.html
 struct sensor_def ov5647 = {
@@ -998,6 +1051,8 @@ struct sensor_def ov5647 = {
 
    .gain_reg =             0x350A,
    .gain_reg_num_bits =    10,
+
+   .set_crop =             ov5647_set_crop,
 };
 
 #endif

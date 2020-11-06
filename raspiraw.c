@@ -95,6 +95,17 @@ struct mode_def
 	uint32_t timing[5];
 	uint32_t term[2];
 	int black_level;
+
+	int binning;	/* Binning or skipping factor */
+};
+
+struct raspiraw_crop {
+	int hinc;
+	int vinc;
+	int width;
+	int height;
+	int left;
+	int top;
 };
 
 struct sensor_def
@@ -133,8 +144,21 @@ struct sensor_def
 
 	uint16_t gain_reg;
 	int gain_reg_num_bits;
+
+	int (*set_crop)(const struct sensor_def *, struct mode_def *, const struct raspiraw_crop *cfg);
 };
 
+//The process first loads the cleaned up dump of the registers
+//than updates the known registers to the proper values
+//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
+enum operation {
+       EQUAL,  //Set bit to value
+       SET,    //Set bit
+       CLEAR,  //Clear bit
+       XOR     //Xor bit
+};
+
+void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
 
 #define NUM_ELEMENTS(a)  (sizeof(a) / sizeof(a[0]))
 
@@ -242,7 +266,8 @@ typedef struct pts_node {
 
 #define DEFAULT_PREVIEW_LAYER 3
 
-typedef struct {
+typedef struct raspiraw_params {
+	struct raspiraw_crop crop;
 	int mode;
 	int hflip;
 	int vflip;
@@ -260,13 +285,7 @@ typedef struct {
 	double awb_gains_r;
 	double awb_gains_b;
 	char *regs;
-	int hinc;
-	int vinc;
 	double fps;
-	int width;
-	int height;
-	int left;
-	int top;
 	char *write_header0;
 	char *write_headerg;
 	char *write_timestamps;
@@ -979,7 +998,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandHinc:
 				if (strlen(argv[i+1]) != 2 ||
-                                    sscanf(argv[i + 1], "%x", &cfg->hinc) != 1)
+                                    sscanf(argv[i + 1], "%x", &cfg->crop.hinc) != 1)
 					valid = 0;
 				else
 					i++;
@@ -987,7 +1006,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 			case CommandVinc:
 				if (strlen(argv[i+1]) != 2 ||
-                                    sscanf(argv[i + 1], "%x", &cfg->vinc) != 1)
+                                    sscanf(argv[i + 1], "%x", &cfg->crop.vinc) != 1)
 					valid = 0;
 				else
 					i++;
@@ -1001,28 +1020,28 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 				break;
 
 			case CommandWidth:
-				if (sscanf(argv[i + 1], "%d", &cfg->width) != 1)
+				if (sscanf(argv[i + 1], "%d", &cfg->crop.width) != 1)
 					valid = 0;
 				else
 					i++;
 				break;
 
 			case CommandHeight:
-				if (sscanf(argv[i + 1], "%d", &cfg->height) != 1)
+				if (sscanf(argv[i + 1], "%d", &cfg->crop.height) != 1)
 					valid = 0;
 				else
 					i++;
 				break;
 
 			case CommandLeft:
-				if (sscanf(argv[i + 1], "%d", &cfg->left) != 1)
+				if (sscanf(argv[i + 1], "%d", &cfg->crop.left) != 1)
 					valid = 0;
 				else
 					i++;
 				break;
 
 			case CommandTop:
-				if (sscanf(argv[i + 1], "%d", &cfg->top) != 1)
+				if (sscanf(argv[i + 1], "%d", &cfg->crop.top) != 1)
 					valid = 0;
 				else
 					i++;
@@ -1169,18 +1188,6 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 
 	return 0;
 }
-
-//The process first loads the cleaned up dump of the registers
-//than updates the known registers to the proper values
-//based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
-enum operation {
-       EQUAL,  //Set bit to value
-       SET,    //Set bit
-       CLEAR,  //Clear bit
-       XOR     //Xor bit
-};
-
-void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
 
 uint32_t get_pixel(int x, int y, uint32_t encoding, int stride, uint8_t *data)
 {
@@ -1446,13 +1453,13 @@ int main(int argc, char** argv) {
 	cfg.camera_num = -1;
 	cfg.exposure_us = -1;
 	cfg.i2c_bus = -1;
-	cfg.hinc = -1;
-	cfg.vinc = -1;
+	cfg.crop.hinc = -1;
+	cfg.crop.vinc = -1;
 	cfg.fps = -1;
-	cfg.width = -1;
-	cfg.height = -1;
-	cfg.left = -1;
-	cfg.top = -1;
+	cfg.crop.width = -1;
+	cfg.crop.height = -1;
+	cfg.crop.left = -1;
+	cfg.crop.top = -1;
 	cfg.opacity = 255;
 	cfg.fullscreen = 1;
 
@@ -1546,16 +1553,22 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if (cfg.hinc >= 0)
+	if (cfg.crop.hinc >= 0 || cfg.crop.vinc >= 0 || cfg.crop.width > 0 || cfg.crop.width > 0 ||
+	    cfg.crop.top >= 0 || cfg.crop.left >= 0)
 	{
-		// TODO: handle modes different to ov5647 as well
-		modReg(sensor_mode, 0x3814, 0, 7, cfg.hinc, EQUAL);
-	}
-
-	if (cfg.vinc >= 0)
-	{
-		// TODO: handle modes different to ov5647 as well
-		modReg(sensor_mode, 0x3815, 0, 7, cfg.vinc, EQUAL);
+		if (sensor->set_crop)
+		{
+			if (sensor->set_crop(sensor, sensor_mode, &cfg.crop))
+			{
+				vcos_log_error("Failed setting manual crops. Aborting");
+				return -1;
+			}
+		}
+		else
+		{
+			vcos_log_error("This sensor does not currently support manual cropping settings. Aborting");
+			return -1;
+		}
 	}
 
 	if (cfg.fps > 0)
@@ -1564,39 +1577,6 @@ int main(int argc, char** argv) {
 		modReg(sensor_mode, sensor->vts_reg+0, 0, 7, n>>8, EQUAL);
 		modReg(sensor_mode, sensor->vts_reg+1, 0, 7, n&0xFF, EQUAL);
 	}
-
-	if (cfg.width > 0)
-	{
-		sensor_mode->width = cfg.width;
-		// TODO: handle modes different to ov5647 as well
-		modReg(sensor_mode, 0x3808, 0, 3, cfg.width >>8, EQUAL);
-		modReg(sensor_mode, 0x3809, 0, 7, cfg.width &0xFF, EQUAL);
-	}
-
-	if (cfg.height > 0)
-	{
-		sensor_mode->height = cfg.height;
-		// TODO: handle modes different to ov5647 as well
-		modReg(sensor_mode, 0x380A, 0, 3, cfg.height >>8, EQUAL);
-		modReg(sensor_mode, 0x380B, 0, 7, cfg.height &0xFF, EQUAL);
-	}
-
-	if (cfg.left > 0)
-	{
-		// TODO: handle modes different to ov5647 as well
-		int val = cfg.left * (cfg.mode < 2 ? 1 : 1 << (cfg.mode / 2 - 1));
-		modReg(sensor_mode, 0x3800, 0, 3, val >>8, EQUAL);
-		modReg(sensor_mode, 0x3801, 0, 7, val &0xFF, EQUAL);
-	}
-
-	if (cfg.top > 0)
-	{
-		// TODO: handle modes different to ov5647 as well
-		int val = cfg.top * (cfg.mode < 2 ? 1 : 1 << (cfg.mode / 2 - 1));
-		modReg(sensor_mode, 0x3802, 0, 3, val >>8, EQUAL);
-		modReg(sensor_mode, 0x3803, 0, 7, val &0xFF, EQUAL);
-	}
-
 
 	if (cfg.bit_depth == -1)
 	{
