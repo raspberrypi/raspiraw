@@ -58,10 +58,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "raw_header.h"
 
-#define DEFAULT_I2C_DEVICE 0
+#define DEFAULT_I2C_DEVICE 10
+#define ALT_I2C_DEVICE 0
 
 #define I2C_DEVICE_NAME_LEN 13	// "/dev/i2c-XXX"+NULL
-static char i2c_device_name[I2C_DEVICE_NAME_LEN];
 
 struct brcm_raw_header *brcm_header = NULL;
 
@@ -352,18 +352,10 @@ static int i2c_rd(int fd, uint8_t i2c_addr, uint16_t reg, uint8_t *values, uint3
 	return 0;
 }
 
-const struct sensor_def * probe_sensor(void)
+const struct sensor_def * probe_sensor(int fd)
 {
-	int fd;
 	const struct sensor_def **sensor_list = &sensors[0];
 	const struct sensor_def *sensor = NULL;
-
-	fd = open(i2c_device_name, O_RDWR);
-	if (!fd)
-	{
-		vcos_log_error("Couldn't open I2C device");
-		return NULL;
-	}
 
 	while(*sensor_list != NULL)
 	{
@@ -441,15 +433,8 @@ void send_regs(int fd, const struct sensor_def *sensor, const struct sensor_regs
 	}
 }
 
-void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mode)
+void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mode, int fd)
 {
-	int fd;
-	fd = open(i2c_device_name, O_RDWR);
-	if (!fd)
-	{
-		vcos_log_error("Couldn't open I2C device");
-		return;
-	}
 	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0)
 	{
 		vcos_log_error("Failed to set I2C address");
@@ -458,26 +443,17 @@ void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mo
 	if (sensor->common_init)
 		send_regs(fd, sensor, sensor->common_init, sensor->num_common_init);
 	send_regs(fd, sensor, mode->regs, mode->num_regs);
-	close(fd);
 	vcos_log_error("Now streaming...");
 }
 
-void stop_camera_streaming(const struct sensor_def *sensor)
+void stop_camera_streaming(const struct sensor_def *sensor, int fd)
 {
-	int fd;
-	fd = open(i2c_device_name, O_RDWR);
-	if (!fd)
-	{
-		vcos_log_error("Couldn't open I2C device");
-		return;
-	}
 	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0)
 	{
 		vcos_log_error("Failed to set I2C address");
 		return;
 	}
 	send_regs(fd, sensor, sensor->stop, sensor->num_stop_regs);
-	close(fd);
 }
 
 /**
@@ -1458,6 +1434,8 @@ int main(int argc, char** argv) {
 	VCOS_THREAD_T awb_thread;
 	VCOS_THREAD_T processing_thread;
 	VCOS_THREAD_T processing_yuv_thread;
+	char i2c_device_name[I2C_DEVICE_NAME_LEN];
+	int i2c_fd;
 
 	//Initialise any non-zero config values.
 	cfg.exposure = -1;
@@ -1467,7 +1445,7 @@ int main(int argc, char** argv) {
 	cfg.bit_depth = -1;
 	cfg.camera_num = -1;
 	cfg.exposure_us = -1;
-	cfg.i2c_bus = DEFAULT_I2C_DEVICE;
+	cfg.i2c_bus = -1;
 	cfg.hinc = -1;
 	cfg.vinc = -1;
 	cfg.fps = -1;
@@ -1495,10 +1473,31 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", cfg.i2c_bus);
-	printf("Using i2C device %s\n", i2c_device_name);
+	if (cfg.i2c_bus == -1)
+	{
+		snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", DEFAULT_I2C_DEVICE);
+		i2c_fd = open(i2c_device_name, O_RDWR);
+		if (!i2c_fd)
+		{
+			snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", ALT_I2C_DEVICE);
+			i2c_fd = open(i2c_device_name, O_RDWR);
+		}
+	}
+	else
+	{
+		snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", cfg.i2c_bus);
+		i2c_fd = open(i2c_device_name, O_RDWR);
+	}
 
-	sensor = probe_sensor();
+	if (!i2c_fd)
+	{
+		printf("Failed to open I2C device %s\n", i2c_device_name);
+		return -1;
+	}
+
+	printf("Using I2C device %s\n", i2c_device_name);
+
+	sensor = probe_sensor(i2c_fd);
 	if (!sensor)
 	{
 		vcos_log_error("No sensor found. Aborting");
@@ -2222,11 +2221,11 @@ int main(int argc, char** argv) {
 	buffers_to_rawcam(&dev);
 	buffers_to_isp_op(&yuv_cb);
 
-	start_camera_streaming(sensor, sensor_mode);
+	start_camera_streaming(sensor, sensor_mode, i2c_fd);
 
 	vcos_sleep(cfg.timeout);
 
-	stop_camera_streaming(sensor);
+	stop_camera_streaming(sensor, i2c_fd);
 
 port_disable:
 	if (cfg.capture)
@@ -2311,6 +2310,7 @@ component_destroy:
 		}
 		free(cfg.ptso);
 	}
+	close(i2c_fd);
 
 	return 0;
 }
