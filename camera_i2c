@@ -177,7 +177,7 @@ raspi-gpio set 2 dh
 	#shutdown
 	# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
 	#raspi-gpio set 41 1
-	./rpi3-gpiovirtbuf s 133 1
+	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
 	if [ "$r" = "4" ]
@@ -207,7 +207,7 @@ raspi-gpio set 2 dh
 	#shutdown
 	# you need this one: https://github.com/6by9/rpi3-gpiovirtbuf
 	#raspi-gpio set 41 1
-	./rpi3-gpiovirtbuf s 133 1
+	`dirname $0`rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
 	if [ "$r" = "4" ]
@@ -238,7 +238,7 @@ raspi-gpio set 2 dh
 		raspi-gpio set 1 a0
 	fi
 	# shutdown
-	./rpi3-gpiovirtbuf s 133 1
+	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	;;
 
 	*)
