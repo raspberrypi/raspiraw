@@ -15,7 +15,7 @@ case $rev in
 # Old revision code encodings first
 '0002'|'0003')
 echo "B Rev1 - I2C 1 on GPIOs 2 & 3. GPIOs 5 & 27 for LED and power"
-if [ "$r" = "4" ]
+if [ "$kernel" = "4" ]
 then
 	# i2c on these pins
 	raspi-gpio set 0 ip
@@ -34,7 +34,7 @@ echo "Use 'raspiraw -y 1' to communicate with the sensor"
 '0004'|'0005'|'0006'|'000d'|'000e'|'000f')
 echo "B Rev2 - I2C 0 on GPIOs 0 & 1. GPIOs 5 & 21 for LED and power"
 # i2c on these pins
-if [ "$r" = "4" ]
+if [ "$kernel" = "4" ]
 then
 	raspi-gpio set 0 ip
 	raspi-gpio set 0 a0
@@ -49,7 +49,7 @@ raspi-gpio set 5 dh
 
 '0010'|'0012'|'0013'|'1041')
 echo "A+, B+, B2, B2 (2837), and Zero (not W) all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
-if [ "$r" = "4" ]
+if [ "$kernel" = "4" ]
 then
 	# i2c can be on pins 0 and 1, so make sure they are not set to alt0
 	raspi-gpio set 0 ip
@@ -71,7 +71,7 @@ echo "Compute Module/ CM3 - I2C 0 on GPIO 0 & 1. GPIOs 2 & 3 for LED and power"
 echo "Warning: This is just a default setting for cam1."
 echo "Download dt-blob.bin from https://www.raspberrypi.org/documentation/hardware/computemodule/dt-blob-cam1.bin and place it in /boot/."
 echo "For cable connection, see https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md"
-if [ "$r" = "4" ]
+if [ "$kernel" = "4" ]
 then
 	# i2c can be on pins 28 and 29, so make sure they are not set to alt0
 	raspi-gpio set 28 ip
@@ -97,7 +97,7 @@ raspi-gpio set 2 dh
 	case $board_type in
 	'02'|'03'|'04'|'09')
 	echo "A+, B+, B2, B2 (2837), and Zero (not W) all revisions - I2C 0 on GPIOs 28 & 29. GPIOs 32 & 41 for LED and power"
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# i2c can be on pins 0 and 1, so make sure they are not set to alt0
 		raspi-gpio set 0 ip
@@ -116,7 +116,7 @@ raspi-gpio set 2 dh
 
 	'0c')
 	echo "PiZero W - I2C 0 on GPIO 28 & 29. GPIOs 40 & 44 for LED and power"
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# i2c can be on pins 0 and 1, so make sure they are not set to alt0
 		raspi-gpio set 0 ip
@@ -138,7 +138,7 @@ raspi-gpio set 2 dh
 	echo "Warning: This is just a default setting for cam1."
 	echo "Download dt-blob.bin from https://www.raspberrypi.org/documentation/hardware/computemodule/dt-blob-cam1.bin and place it in /boot/."
 	echo "For cable connection, see https://www.raspberrypi.org/documentation/hardware/computemodule/cmio-camera.md"
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# i2c can be on pins 28 and 29, so make sure they are not set to alt0
 		raspi-gpio set 28 ip
@@ -161,7 +161,7 @@ raspi-gpio set 2 dh
 	echo "Raspberry Pi3B / Pi3B+ / 3A"
 	# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
 	# Pins 44&45 Alt1=i2c0, alt2=i2c1
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
 		raspi-gpio set 0 ip
@@ -180,7 +180,7 @@ raspi-gpio set 2 dh
 	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		i2cdetect -y 0
 	else
@@ -193,7 +193,7 @@ raspi-gpio set 2 dh
 	# https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=120702&start=100
 	# Pins 44&45 Alt1=i2c0, alt2=i2c1
 	# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# Do NOT alter 28&29 as they are used by the ethernet PHY.
 		raspi-gpio set 0 ip
@@ -210,7 +210,7 @@ raspi-gpio set 2 dh
 	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		i2cdetect -y 0
 	else
@@ -226,7 +226,7 @@ raspi-gpio set 2 dh
 	'14')
 	# CM4
 	echo "CM4 - assume CAM1 on 44&45"
-	if [ "$r" = "4" ]
+	if [ "$kernel" = "4" ]
 	then
 		# i2c can be on pins 44 and 45, so make sure they are not set to alt0
 		raspi-gpio set 44 ip
@@ -249,7 +249,7 @@ raspi-gpio set 2 dh
 ;;
 esac
 
-if [ "$r" = "4" ]
+if [ "$kernel" = "4" ]
 then
 	echo "Use i2c-0 for the sensor (-y 0)"
 else
