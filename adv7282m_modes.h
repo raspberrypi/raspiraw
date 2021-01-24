@@ -192,13 +192,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define V4L2_CID_ADV_FAST_SWITCH (V4L2_CID_USER_ADV7180_BASE + 0x00)
 
-#define adv7180_write(STT, reg, dat)  {reg, dat}
-#define adv7180_csi_write(STT, reg, dat)  {reg, dat}
-#define adv7180_vpp_write(STT, reg, dat)  {reg, dat}
+// clang-format off
+// Allman/Linux style braces in these macros result in odd formatting.
+
+#define adv7180_write(STT, reg, dat)     {reg, dat}
+#define adv7180_csi_write(STT, reg, dat) {reg, dat}
+#define adv7180_vpp_write(STT, reg, dat) {reg, dat}
 
 #define SET_BASE  {0xFFFF, ADV7180_DEFAULT_BASE_I2C_ADDR}
 #define SET_CSI   {0xFFFF, ADV7180_DEFAULT_CSI_I2C_ADDR}
 #define SET_VPP   {0xFFFF, ADV7180_DEFAULT_VPP_I2C_ADDR}
+
+// clang-format on
 
 struct sensor_regs adv7282_pal[] =
 {
@@ -334,8 +339,6 @@ struct mode_def adv7282_modes[] = {
       .black_level   = 0,
    },
 };
-
-#undef addreg
 
 struct sensor_regs adv7282_stop[] = {
    //adv7180_set_power
