@@ -17,8 +17,8 @@ modification, are permitted provided that the following conditions are met:
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
@@ -816,108 +816,108 @@ struct sensor_regs imx477_1012x760_regs[] = {
     {0x0100, 0x01},
 };
 
-// clang-format off
+// clang-format on
 
 struct mode_def imx477_modes[] = {
-   {
-      .regs          = imx477_4056x3040_regs,
-      .num_regs      = NUM_ELEMENTS(imx477_4056x3040_regs),
-      .width         = 4056,
-      .height        = 3040,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_RGGB,
-      .native_bit_depth = 12,
-      .image_id      = 0x2C,
-      .data_lanes    = 2,
-      .min_vts       = 3072,
-      .line_time_ns  = 0x5dc0,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 256,
-   },
-   {
-      .regs          = imx477_2028x1520_regs,
-      .num_regs      = NUM_ELEMENTS(imx477_2028x1520_regs),
-      .width         = 2028,
-      .height        = 1520,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_RGGB,
-      .native_bit_depth = 12,
-      .image_id      = 0x2C,
-      .data_lanes    = 2,
-      .min_vts       = 1568,
-      .line_time_ns  = 0x31c4,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 256,
-   },
-   {
-      .regs          = imx477_2028x1080_regs,
-      .num_regs      = NUM_ELEMENTS(imx477_2028x1080_regs),
-      .width         = 2028,
-      .height        = 1080,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_RGGB,
-      .native_bit_depth = 12,
-      .image_id      = 0x2C,
-      .data_lanes    = 2,
-      .min_vts       = 1134,
-      .line_time_ns  = 0x31c4,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 256,
-   },
-   {
-      .regs          = imx477_1012x760_regs,
-      .num_regs      = NUM_ELEMENTS(imx477_1012x760_regs),
-      .width         = 1012,
-      .height        = 760,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_RGGB,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 814,
-      .line_time_ns  = 0x1460,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 64,
-   },
+    {
+	.regs		  = imx477_4056x3040_regs,
+	.num_regs	  = NUM_ELEMENTS(imx477_4056x3040_regs),
+	.width		  = 4056,
+	.height		  = 3040,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_RGGB,
+	.native_bit_depth = 12,
+	.image_id	  = 0x2C,
+	.data_lanes	  = 2,
+	.min_vts	  = 3072,
+	.line_time_ns	  = 0x5dc0,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 256,
+    },
+    {
+	.regs		  = imx477_2028x1520_regs,
+	.num_regs	  = NUM_ELEMENTS(imx477_2028x1520_regs),
+	.width		  = 2028,
+	.height		  = 1520,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_RGGB,
+	.native_bit_depth = 12,
+	.image_id	  = 0x2C,
+	.data_lanes	  = 2,
+	.min_vts	  = 1568,
+	.line_time_ns	  = 0x31c4,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 256,
+    },
+    {
+	.regs		  = imx477_2028x1080_regs,
+	.num_regs	  = NUM_ELEMENTS(imx477_2028x1080_regs),
+	.width		  = 2028,
+	.height		  = 1080,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_RGGB,
+	.native_bit_depth = 12,
+	.image_id	  = 0x2C,
+	.data_lanes	  = 2,
+	.min_vts	  = 1134,
+	.line_time_ns	  = 0x31c4,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 256,
+    },
+    {
+	.regs		  = imx477_1012x760_regs,
+	.num_regs	  = NUM_ELEMENTS(imx477_1012x760_regs),
+	.width		  = 1012,
+	.height		  = 760,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_RGGB,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 814,
+	.line_time_ns	  = 0x1460,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 64,
+    },
 };
 
 struct sensor_regs imx477_stop[] = {
     // to power down */
-    {0x0100, 0x00},  // disable streaming
+    {0x0100, 0x00}, // disable streaming
 };
 
 struct sensor_def imx477 = {
-      .name =                 "imx477",
-      .common_init =          imx477_common_init,
-      .num_common_init =      NUM_ELEMENTS(imx477_common_init),
-      .modes =                imx477_modes,
-      .num_modes =            NUM_ELEMENTS(imx477_modes),
-      .stop =                 imx477_stop,
-      .num_stop_regs =        NUM_ELEMENTS(imx477_stop),
+    .name	     = "imx477",
+    .common_init     = imx477_common_init,
+    .num_common_init = NUM_ELEMENTS(imx477_common_init),
+    .modes	     = imx477_modes,
+    .num_modes	     = NUM_ELEMENTS(imx477_modes),
+    .stop	     = imx477_stop,
+    .num_stop_regs   = NUM_ELEMENTS(imx477_stop),
 
-      .i2c_addr =             0x1A,
-      .i2c_addressing =       2,
-      .i2c_ident_length =     2,
-      .i2c_ident_reg =        0x0016,
-      .i2c_ident_value =      0x7704,     //Bytes reversed
+    .i2c_addr	      = 0x1A,
+    .i2c_addressing   = 2,
+    .i2c_ident_length = 2,
+    .i2c_ident_reg    = 0x0016,
+    .i2c_ident_value  = 0x7704, // Bytes reversed
 
-      .vflip_reg =            0x0101,
-      .vflip_reg_bit =        1,
-      .hflip_reg =            0x0101,
-      .hflip_reg_bit =        0,
+    .vflip_reg	   = 0x0101,
+    .vflip_reg_bit = 1,
+    .hflip_reg	   = 0x0101,
+    .hflip_reg_bit = 0,
 
-      .exposure_reg =         0x0202,
-      .exposure_reg_num_bits = 16,
+    .exposure_reg	   = 0x0202,
+    .exposure_reg_num_bits = 16,
 
-      .vts_reg =              0x0340,
-      .vts_reg_num_bits =     16,
+    .vts_reg	      = 0x0340,
+    .vts_reg_num_bits = 16,
 
-      .gain_reg =             0x0204,
-      .gain_reg_num_bits =    10,
+    .gain_reg	       = 0x0204,
+    .gain_reg_num_bits = 10,
 };
 
 #endif

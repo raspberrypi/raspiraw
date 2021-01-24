@@ -17,8 +17,8 @@ modification, are permitted provided that the following conditions are met:
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
@@ -26,7 +26,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// These values are copied from https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=162722&p=1052339
+// These values are copied from
+// https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=162722&p=1052339
 // Raspberry Pi can not discuss these settings as we have information from
 // Sony under NDA.
 
@@ -570,171 +571,173 @@ struct sensor_regs imx219_mode7[] =
 // clang-format on
 
 struct mode_def imx219_modes[] = {
-   {
-      .regs             = imx219_8MPix,
-      .num_regs      = NUM_ELEMENTS(imx219_8MPix),
-      .width         = 3280,
-      .height        = 2464,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 2504,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode1,
-      .num_regs      = NUM_ELEMENTS(imx219_mode1),
-      .width         = 1920,
-      .height        = 1080,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1084,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode2,
-      .num_regs      = NUM_ELEMENTS(imx219_mode2),
-      .width         = 3280,
-      .height        = 2464,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 2468,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode3,
-      .num_regs      = NUM_ELEMENTS(imx219_mode3),
-      .width         = 3280,
-      .height        = 2464,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 2468,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode4,
-      .num_regs      = NUM_ELEMENTS(imx219_mode4),
-      .width         = 1640,
-      .height        = 1232,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1236,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode5,
-      .num_regs      = NUM_ELEMENTS(imx219_mode5),
-      .width         = 1640,
-      .height        = 922,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 926,
-      .line_time_ns  = 18904,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode6,
-      .num_regs      = NUM_ELEMENTS(imx219_mode6),
-      .width         = 1280,
-      .height        = 720,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 724,
-      .line_time_ns  = 19517,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
-   {
-      .regs          = imx219_mode7,
-      .num_regs      = NUM_ELEMENTS(imx219_mode7),
-      .width         = 640,
-      .height        = 480,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_BGGR,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 484,
-      .line_time_ns  = 19517,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 66,
-   },
+    {
+	.regs		  = imx219_8MPix,
+	.num_regs	  = NUM_ELEMENTS(imx219_8MPix),
+	.width		  = 3280,
+	.height		  = 2464,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 2504,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode1,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode1),
+	.width		  = 1920,
+	.height		  = 1080,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1084,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode2,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode2),
+	.width		  = 3280,
+	.height		  = 2464,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 2468,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode3,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode3),
+	.width		  = 3280,
+	.height		  = 2464,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 2468,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode4,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode4),
+	.width		  = 1640,
+	.height		  = 1232,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1236,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode5,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode5),
+	.width		  = 1640,
+	.height		  = 922,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 926,
+	.line_time_ns	  = 18904,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode6,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode6),
+	.width		  = 1280,
+	.height		  = 720,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 724,
+	.line_time_ns	  = 19517,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
+    {
+	.regs		  = imx219_mode7,
+	.num_regs	  = NUM_ELEMENTS(imx219_mode7),
+	.width		  = 640,
+	.height		  = 480,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_BGGR,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 484,
+	.line_time_ns	  = 19517,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 66,
+    },
 };
 
-//From https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c
+// From
+// https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c
 struct sensor_regs imx219_stop[] = {
     // to power down
-    {0x0100, 0x00},  // disable streaming
+    {0x0100, 0x00}, // disable streaming
 };
 
 // ID, exposure, and gain register settings taken from
 // https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c
-// Flip settings taken from https://github.com/rellimmot/Sony-IMX219-Raspberry-Pi-V2-CMOS/blob/master/imx219mipiraw_Sensor.c#L585
+// Flip settings taken from
+// https://github.com/rellimmot/Sony-IMX219-Raspberry-Pi-V2-CMOS/blob/master/imx219mipiraw_Sensor.c#L585
 struct sensor_def imx219 = {
-      .name =                 "imx219",
-      .modes =                imx219_modes,
-      .num_modes =            NUM_ELEMENTS(imx219_modes),
-      .stop =                 imx219_stop,
-      .num_stop_regs =        NUM_ELEMENTS(imx219_stop),
+    .name	   = "imx219",
+    .modes	   = imx219_modes,
+    .num_modes	   = NUM_ELEMENTS(imx219_modes),
+    .stop	   = imx219_stop,
+    .num_stop_regs = NUM_ELEMENTS(imx219_stop),
 
-      .i2c_addr =             0x10,
-      .i2c_addressing =       2,
-      .i2c_ident_length =     2,
-      .i2c_ident_reg =        0x0000,
-      .i2c_ident_value =      0x1902,  // 0x0219 bytes reversed
+    .i2c_addr	      = 0x10,
+    .i2c_addressing   = 2,
+    .i2c_ident_length = 2,
+    .i2c_ident_reg    = 0x0000,
+    .i2c_ident_value  = 0x1902, // 0x0219 bytes reversed
 
-      .vflip_reg =            0x172,
-      .vflip_reg_bit =        1,
-      .hflip_reg =            0x172,
-      .hflip_reg_bit =        0,
+    .vflip_reg	   = 0x172,
+    .vflip_reg_bit = 1,
+    .hflip_reg	   = 0x172,
+    .hflip_reg_bit = 0,
 
-      .exposure_reg =         0x015A,
-      .exposure_reg_num_bits = 16,
+    .exposure_reg	   = 0x015A,
+    .exposure_reg_num_bits = 16,
 
-      .vts_reg =              0x0160,
-      .vts_reg_num_bits =     16,
+    .vts_reg	      = 0x0160,
+    .vts_reg_num_bits = 16,
 
-      .gain_reg =             0x0157,
-      .gain_reg_num_bits =    8,  //Only valid up to 230.
+    .gain_reg	       = 0x0157,
+    .gain_reg_num_bits = 8, // Only valid up to 230.
 };
 
 #endif

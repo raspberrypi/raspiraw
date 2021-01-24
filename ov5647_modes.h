@@ -17,15 +17,14 @@ modification, are permitted provided that the following conditions are met:
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 
 // These register settings were as logged off the line
 // by jbeale. There is a datasheet for OV5647 floating
@@ -823,222 +822,224 @@ struct sensor_regs ov5647_mode7[] = {
 // clang-format on
 
 struct mode_def ov5647_modes[] = {
-   {
-      .regs          = ov5647_5MPix,
-      .num_regs      = NUM_ELEMENTS(ov5647_5MPix),
-      .width         = 2592,
-      .height        = 1944,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1968,
-      .line_time_ns  = 32503,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 1,
-   },
-   {
-      .regs          = ov5647_mode1,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode1),
-      .width         = 1920,
-      .height        = 1080,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1104,
-      .line_time_ns  = 29584,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 1,
-   },
-   {
-      .regs          = ov5647_mode2,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode2),
-      .width         = 2592,
-      .height        = 1944,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1968,
-      .line_time_ns  = 32503,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 1,
-   },
-   {
-      .regs          = ov5647_mode3,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode3),
-      .width         = 2592,
-      .height        = 1944,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 1968,
-      .line_time_ns  = 183789,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 1,
-   },
-   {
-      .regs          = ov5647_mode4,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode4),
-      .width         = 1296,
-      .height        = 976,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 996,
-      .line_time_ns  = 23216,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 2,
-   },
-   {
-      .regs          = ov5647_mode5,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode5),
-      .width         = 1296,
-      .height        = 730,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 754,
-      .line_time_ns  = 23216,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 2,
-   },
-   {
-      .regs          = ov5647_mode6,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode6),
-      .width         = 640,
-      .height        = 480,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 484,
-      .line_time_ns  = 31749,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 4,
-   },
-   {
-      .regs          = ov5647_mode7,
-      .num_regs      = NUM_ELEMENTS(ov5647_mode7),
-      .width         = 640,
-      .height        = 480,
-      .encoding      = 0,
-      .order         = BAYER_ORDER_GBRG,
-      .native_bit_depth = 10,
-      .image_id      = 0x2B,
-      .data_lanes    = 2,
-      .min_vts       = 484,
-      .line_time_ns  = 21165,
-      .timing        = {0, 0, 0, 0, 0},
-      .term          = {0, 0},
-      .black_level   = 16,
-      .binning       = 4,
-   },
+    {
+	.regs		  = ov5647_5MPix,
+	.num_regs	  = NUM_ELEMENTS(ov5647_5MPix),
+	.width		  = 2592,
+	.height		  = 1944,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1968,
+	.line_time_ns	  = 32503,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 1,
+    },
+    {
+	.regs		  = ov5647_mode1,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode1),
+	.width		  = 1920,
+	.height		  = 1080,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1104,
+	.line_time_ns	  = 29584,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 1,
+    },
+    {
+	.regs		  = ov5647_mode2,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode2),
+	.width		  = 2592,
+	.height		  = 1944,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1968,
+	.line_time_ns	  = 32503,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 1,
+    },
+    {
+	.regs		  = ov5647_mode3,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode3),
+	.width		  = 2592,
+	.height		  = 1944,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 1968,
+	.line_time_ns	  = 183789,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 1,
+    },
+    {
+	.regs		  = ov5647_mode4,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode4),
+	.width		  = 1296,
+	.height		  = 976,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 996,
+	.line_time_ns	  = 23216,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 2,
+    },
+    {
+	.regs		  = ov5647_mode5,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode5),
+	.width		  = 1296,
+	.height		  = 730,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 754,
+	.line_time_ns	  = 23216,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 2,
+    },
+    {
+	.regs		  = ov5647_mode6,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode6),
+	.width		  = 640,
+	.height		  = 480,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 484,
+	.line_time_ns	  = 31749,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 4,
+    },
+    {
+	.regs		  = ov5647_mode7,
+	.num_regs	  = NUM_ELEMENTS(ov5647_mode7),
+	.width		  = 640,
+	.height		  = 480,
+	.encoding	  = 0,
+	.order		  = BAYER_ORDER_GBRG,
+	.native_bit_depth = 10,
+	.image_id	  = 0x2B,
+	.data_lanes	  = 2,
+	.min_vts	  = 484,
+	.line_time_ns	  = 21165,
+	.timing		  = {0, 0, 0, 0, 0},
+	.term		  = {0, 0},
+	.black_level	  = 16,
+	.binning	  = 4,
+    },
 };
 
 struct sensor_regs ov5647_stop[] = {
-   { 0x0100, 0x00 },
+    {0x0100, 0x00},
 };
 
-static
-int ov5647_set_crop(const struct sensor_def *sensor, struct mode_def *sensor_mode,
-                    const struct raspiraw_crop *cfg)
+static int ov5647_set_crop(const struct sensor_def *sensor,
+			   struct mode_def *sensor_mode,
+			   const struct raspiraw_crop *cfg)
 {
-   if (cfg->hinc >= 0)
-   {
-      modReg(sensor_mode, 0x3814, 0, 7, cfg->hinc, EQUAL);
-   }
+	if (cfg->hinc >= 0)
+	{
+		modReg(sensor_mode, 0x3814, 0, 7, cfg->hinc, EQUAL);
+	}
 
-   if (cfg->vinc >= 0)
-   {
-      modReg(sensor_mode, 0x3815, 0, 7, cfg->vinc, EQUAL);
-   }
+	if (cfg->vinc >= 0)
+	{
+		modReg(sensor_mode, 0x3815, 0, 7, cfg->vinc, EQUAL);
+	}
 
-   if (cfg->width > 0)
-   {
-      sensor_mode->width = cfg->width;
-      modReg(sensor_mode, 0x3808, 0, 3, cfg->width >>8, EQUAL);
-      modReg(sensor_mode, 0x3809, 0, 7, cfg->width &0xFF, EQUAL);
-   }
+	if (cfg->width > 0)
+	{
+		sensor_mode->width = cfg->width;
+		modReg(sensor_mode, 0x3808, 0, 3, cfg->width >> 8, EQUAL);
+		modReg(sensor_mode, 0x3809, 0, 7, cfg->width & 0xFF, EQUAL);
+	}
 
-   if (cfg->height > 0)
-   {
-      sensor_mode->height = cfg->height;
-      modReg(sensor_mode, 0x380A, 0, 3, cfg->height >>8, EQUAL);
-      modReg(sensor_mode, 0x380B, 0, 7, cfg->height &0xFF, EQUAL);
-   }
+	if (cfg->height > 0)
+	{
+		sensor_mode->height = cfg->height;
+		modReg(sensor_mode, 0x380A, 0, 3, cfg->height >> 8, EQUAL);
+		modReg(sensor_mode, 0x380B, 0, 7, cfg->height & 0xFF, EQUAL);
+	}
 
-   if (cfg->left > 0)
-   {
-      int val = cfg->left * sensor_mode->binning;
-      modReg(sensor_mode, 0x3800, 0, 3, val >>8, EQUAL);
-      modReg(sensor_mode, 0x3801, 0, 7, val &0xFF, EQUAL);
-   }
+	if (cfg->left > 0)
+	{
+		int val = cfg->left * sensor_mode->binning;
+		modReg(sensor_mode, 0x3800, 0, 3, val >> 8, EQUAL);
+		modReg(sensor_mode, 0x3801, 0, 7, val & 0xFF, EQUAL);
+	}
 
-   if (cfg->top > 0)
-   {
-      int val = cfg->top * sensor_mode->binning;
-      modReg(sensor_mode, 0x3802, 0, 3, val >>8, EQUAL);
-      modReg(sensor_mode, 0x3803, 0, 7, val &0xFF, EQUAL);
-   }
+	if (cfg->top > 0)
+	{
+		int val = cfg->top * sensor_mode->binning;
+		modReg(sensor_mode, 0x3802, 0, 3, val >> 8, EQUAL);
+		modReg(sensor_mode, 0x3803, 0, 7, val & 0xFF, EQUAL);
+	}
 
-   return 0;
+	return 0;
 }
 
-// ID register settings taken from http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1298623.html
+// ID register settings taken from
+// http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1298623.html
 struct sensor_def ov5647 = {
-   .name =                 "ov5647",
-   .modes =                ov5647_modes,
-   .num_modes =            NUM_ELEMENTS(ov5647_modes),
-   .stop =                 ov5647_stop,
-   .num_stop_regs =        NUM_ELEMENTS(ov5647_stop),
+    .name	   = "ov5647",
+    .modes	   = ov5647_modes,
+    .num_modes	   = NUM_ELEMENTS(ov5647_modes),
+    .stop	   = ov5647_stop,
+    .num_stop_regs = NUM_ELEMENTS(ov5647_stop),
 
-   .i2c_addr =             0x36,
-   .i2c_addressing =       2,
-   .i2c_ident_length =     2,
-   .i2c_ident_reg =        0x300A,
-   .i2c_ident_value =      0x4756,  //0x5647 byte swapped
+    .i2c_addr	      = 0x36,
+    .i2c_addressing   = 2,
+    .i2c_ident_length = 2,
+    .i2c_ident_reg    = 0x300A,
+    .i2c_ident_value  = 0x4756, // 0x5647 byte swapped
 
-   .vflip_reg =            0x3820,
-   .vflip_reg_bit =        0,
-   .hflip_reg =            0x3821,
-   .hflip_reg_bit =        0,
+    .vflip_reg	   = 0x3820,
+    .vflip_reg_bit = 0,
+    .hflip_reg	   = 0x3821,
+    .hflip_reg_bit = 0,
 
-   .exposure_reg =         0x3500,
-   .exposure_reg_num_bits = 20,
+    .exposure_reg	   = 0x3500,
+    .exposure_reg_num_bits = 20,
 
-   .vts_reg =              0x380E,
-   .vts_reg_num_bits =     16,      //  total vertical size [15:8] and [7:0] (ov5647 preliminary datasheet is inaccurate)
+    .vts_reg	      = 0x380E,
+    .vts_reg_num_bits = 16, //  total vertical size [15:8] and [7:0] (ov5647
+			    //  preliminary datasheet is inaccurate)
 
-   .gain_reg =             0x350A,
-   .gain_reg_num_bits =    10,
+    .gain_reg	       = 0x350A,
+    .gain_reg_num_bits = 10,
 
-   .set_crop =             ov5647_set_crop,
+    .set_crop = ov5647_set_crop,
 };
 
 #endif
