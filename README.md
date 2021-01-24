@@ -250,8 +250,8 @@ This is now part of raw2ogg2anim tool.
 #### do once
 
 You have to clone the repo.
-Then "cd raspiraw; ./buildme".
-Finally add this line to your ~/.bashrc.
+Then change directory `cd raspiraw` and build the code by running `make`.  Optionally you can define the compiler with `CC=gcc make` or `CC=clang make`.
+Finally add this line to your `~/.bashrc`.
 
 	$ tail -1 ~/.bashrc 
 	PATH=~/raspiraw:~/raspiraw/tools:$PATH
