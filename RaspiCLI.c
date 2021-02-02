@@ -58,9 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @return command ID if found, -1 if not found
  *
  */
-int raspicli_get_command_id(const COMMAND_LIST *commands,
-			    const int num_commands, const char *arg,
-			    int *num_parameters)
+int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands, const char *arg, int *num_parameters)
 {
 	int command_id = -1;
 	int j;
@@ -74,11 +72,10 @@ int raspicli_get_command_id(const COMMAND_LIST *commands,
 
 	for (j = 0; j < num_commands; j++)
 	{
-		if (!strcmp(arg, commands[j].command) ||
-		    !strcmp(arg, commands[j].abbrev))
+		if (!strcmp(arg, commands[j].command) || !strcmp(arg, commands[j].abbrev))
 		{
 			// match
-			command_id	= commands[j].id;
+			command_id = commands[j].id;
 			*num_parameters = commands[j].num_parameters;
 			break;
 		}
@@ -106,8 +103,7 @@ void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands)
 
 	for (i = 0; i < num_commands; i++)
 	{
-		fprintf(stdout, "-%s, -%s\t: %s\n", commands[i].abbrev,
-			commands[i].command, commands[i].help);
+		fprintf(stdout, "-%s, -%s\t: %s\n", commands[i].abbrev, commands[i].command, commands[i].help);
 	}
 }
 

@@ -4,5 +4,6 @@ UseTab: Always
 BreakBeforeBraces: Allman
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
-AlignConsecutiveAssignments: true
 AlignConsecutiveMacros: true
+ColumnLimit: 120
+Cpp11BracedListStyle: false

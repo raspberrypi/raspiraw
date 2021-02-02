@@ -205,168 +205,166 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // clang-format on
 
 struct sensor_regs adv7282_pal[] = {
-    // init_device
-    adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_RES),
-    {0xFFFE, 100},
+	// init_device
+	adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_RES),
+	{ 0xFFFE, 100 },
 
-    // adv7182_init
-    adv7180_write(state, ADV7180_REG_CSI_SLAVE_ADDR,
-		  ADV7180_DEFAULT_CSI_I2C_ADDR << 1),
+	// adv7182_init
+	adv7180_write(state, ADV7180_REG_CSI_SLAVE_ADDR, ADV7180_DEFAULT_CSI_I2C_ADDR << 1),
 
-    adv7180_write(state, ADV7180_REG_VPP_SLAVE_ADDR,
-		  ADV7180_DEFAULT_VPP_I2C_ADDR << 1),
+	adv7180_write(state, ADV7180_REG_VPP_SLAVE_ADDR, ADV7180_DEFAULT_VPP_I2C_ADDR << 1),
 
-    /* ADI recommended writes for improved video quality */
-    adv7180_write(state, 0x0080, 0x51),
-    adv7180_write(state, 0x0081, 0x51),
-    adv7180_write(state, 0x0082, 0x68),
+	/* ADI recommended writes for improved video quality */
+	adv7180_write(state, 0x0080, 0x51),
+	adv7180_write(state, 0x0081, 0x51),
+	adv7180_write(state, 0x0082, 0x68),
 
-    /* ADI required writes */
-    adv7180_write(state, ADV7180_REG_OUTPUT_CONTROL, 0x4e),
-    adv7180_write(state, ADV7180_REG_EXTENDED_OUTPUT_CONTROL, 0x57),
-    adv7180_write(state, ADV7180_REG_CTRL_2, 0xc0),
+	/* ADI required writes */
+	adv7180_write(state, ADV7180_REG_OUTPUT_CONTROL, 0x4e),
+	adv7180_write(state, ADV7180_REG_EXTENDED_OUTPUT_CONTROL, 0x57),
+	adv7180_write(state, ADV7180_REG_CTRL_2, 0xc0),
 
-    adv7180_write(state, 0x0013, 0x00),
+	adv7180_write(state, 0x0013, 0x00),
 
-    // adv7182_set_std
-    adv7180_write(state, ADV7182_REG_INPUT_VIDSEL, ADV7180_STD_PAL_BG << 4),
+	// adv7182_set_std
+	adv7180_write(state, ADV7182_REG_INPUT_VIDSEL, ADV7180_STD_PAL_BG << 4),
 
-    // adv7180_set_field_mode
-    SET_CSI,
-    adv7180_csi_write(state, 0x01, 0x20),
-    adv7180_csi_write(state, 0x02, 0x28),
-    adv7180_csi_write(state, 0x03, 0x38),
-    adv7180_csi_write(state, 0x04, 0x30),
-    adv7180_csi_write(state, 0x05, 0x30),
-    adv7180_csi_write(state, 0x06, 0x80),
-    adv7180_csi_write(state, 0x07, 0x70),
-    adv7180_csi_write(state, 0x08, 0x50),
-    SET_VPP,
-    adv7180_vpp_write(state, 0xa3, 0x00),
-    adv7180_vpp_write(state, 0x5b, 0x00),
-    adv7180_vpp_write(state, 0x55, 0x80),
+	// adv7180_set_field_mode
+	SET_CSI,
+	adv7180_csi_write(state, 0x01, 0x20),
+	adv7180_csi_write(state, 0x02, 0x28),
+	adv7180_csi_write(state, 0x03, 0x38),
+	adv7180_csi_write(state, 0x04, 0x30),
+	adv7180_csi_write(state, 0x05, 0x30),
+	adv7180_csi_write(state, 0x06, 0x80),
+	adv7180_csi_write(state, 0x07, 0x70),
+	adv7180_csi_write(state, 0x08, 0x50),
+	SET_VPP,
+	adv7180_vpp_write(state, 0xa3, 0x00),
+	adv7180_vpp_write(state, 0x5b, 0x00),
+	adv7180_vpp_write(state, 0x55, 0x80),
 
-    // s_input
-    SET_BASE,
-    adv7180_write(state, ADV7180_REG_INPUT_CONTROL, ADV7180_INPUT_CVBS_AIN1),
+	// s_input
+	SET_BASE,
+	adv7180_write(state, ADV7180_REG_INPUT_CONTROL, ADV7180_INPUT_CVBS_AIN1),
 
-    /* Reset clamp circuitry - ADI recommended writes */
-    adv7180_write(state, ADV7180_REG_RST_CLAMP, 0x00),
-    adv7180_write(state, ADV7180_REG_RST_CLAMP, 0xff),
+	/* Reset clamp circuitry - ADI recommended writes */
+	adv7180_write(state, ADV7180_REG_RST_CLAMP, 0x00),
+	adv7180_write(state, ADV7180_REG_RST_CLAMP, 0xff),
 
-    // input_type = adv7182_get_input_type(input),
+	// input_type = adv7182_get_input_type(input),
 
-    // switch (input_type) {
-    // case ADV7182_INPUT_TYPE_CVBS:
-    // case ADV7182_INPUT_TYPE_DIFF_CVBS:
-    /* ADI recommends to use the SH1 filter */
-    adv7180_write(state, ADV7180_REG_SHAP_FILTER_CTL_1, 0x41),
-    // break,
-    // default:
-    // adv7180_write(state, ADV7180_REG_SHAP_FILTER_CTL_1, 0x01),
-    // break,
-    // }
+	// switch (input_type) {
+	// case ADV7182_INPUT_TYPE_CVBS:
+	// case ADV7182_INPUT_TYPE_DIFF_CVBS:
+	/* ADI recommends to use the SH1 filter */
+	adv7180_write(state, ADV7180_REG_SHAP_FILTER_CTL_1, 0x41),
+	// break,
+	// default:
+	// adv7180_write(state, ADV7180_REG_SHAP_FILTER_CTL_1, 0x01),
+	// break,
+	// }
 
-    //[ADV7182_INPUT_TYPE_CVBS] = { 0xCD, 0x4E, 0x80 },
-    // for (i = 0, i < ARRAY_SIZE(adv7182_lbias_settings[0]), i++)
-    // adv7180_write(state, ADV7180_REG_CVBS_TRIM + i, lbias[i]),
-    adv7180_write(state, ADV7180_REG_CVBS_TRIM + 0, 0xCD),
-    adv7180_write(state, ADV7180_REG_CVBS_TRIM + 1, 0x4E),
-    adv7180_write(state, ADV7180_REG_CVBS_TRIM + 2, 0x80),
+	//[ADV7182_INPUT_TYPE_CVBS] = { 0xCD, 0x4E, 0x80 },
+	// for (i = 0, i < ARRAY_SIZE(adv7182_lbias_settings[0]), i++)
+	// adv7180_write(state, ADV7180_REG_CVBS_TRIM + i, lbias[i]),
+	adv7180_write(state, ADV7180_REG_CVBS_TRIM + 0, 0xCD),
+	adv7180_write(state, ADV7180_REG_CVBS_TRIM + 1, 0x4E),
+	adv7180_write(state, ADV7180_REG_CVBS_TRIM + 2, 0x80),
 
-    // if (input_type == ADV7182_INPUT_TYPE_DIFF_CVBS) {
-    /* ADI required writes to make differential CVBS work */
-    //} else {
-    adv7180_write(state, ADV7180_REG_RES_CIR, 0xf0),
-    adv7180_write(state, ADV7180_REG_CLAMP_ADJ, 0xd0),
-    adv7180_write(state, ADV7180_REG_DIFF_MODE, 0x10),
-    adv7180_write(state, ADV7180_REG_AGC_ADJ1, 0x9c),
-    adv7180_write(state, ADV7180_REG_AGC_ADJ2, 0x00),
+	// if (input_type == ADV7182_INPUT_TYPE_DIFF_CVBS) {
+	/* ADI required writes to make differential CVBS work */
+	//} else {
+	adv7180_write(state, ADV7180_REG_RES_CIR, 0xf0),
+	adv7180_write(state, ADV7180_REG_CLAMP_ADJ, 0xd0),
+	adv7180_write(state, ADV7180_REG_DIFF_MODE, 0x10),
+	adv7180_write(state, ADV7180_REG_AGC_ADJ1, 0x9c),
+	adv7180_write(state, ADV7180_REG_AGC_ADJ2, 0x00),
 
-    // adv7180_set_power
-    adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_ON),
+	// adv7180_set_power
+	adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_ON),
 
-    SET_CSI,
-    adv7180_csi_write(state, 0xDE, 0x02),
-    adv7180_csi_write(state, 0xD2, 0xF7),
-    adv7180_csi_write(state, 0xD8, 0x65),
-    adv7180_csi_write(state, 0xE0, 0x09),
-    adv7180_csi_write(state, 0x2C, 0x00),
-    adv7180_csi_write(state, 0x1D, 0x80),
-    adv7180_csi_write(state, 0x00, 0x00),
-    SET_BASE,
+	SET_CSI,
+	adv7180_csi_write(state, 0xDE, 0x02),
+	adv7180_csi_write(state, 0xD2, 0xF7),
+	adv7180_csi_write(state, 0xD8, 0x65),
+	adv7180_csi_write(state, 0xE0, 0x09),
+	adv7180_csi_write(state, 0x2C, 0x00),
+	adv7180_csi_write(state, 0x1D, 0x80),
+	adv7180_csi_write(state, 0x00, 0x00),
+	SET_BASE,
 };
 
 struct sensor_regs adv7282_ntsc[] = {};
 
 struct mode_def adv7282_modes[] = {
-    {
-	.regs		  = adv7282_pal,
-	.num_regs	  = NUM_ELEMENTS(adv7282_pal),
-	.width		  = 720,
-	.height		  = 576,
-	.encoding	  = MMAL_ENCODING_UYVY,
-	.order		  = 0,
-	.native_bit_depth = 0,
-	.image_id	  = 0x1E,
-	.data_lanes	  = 1,
-	.min_vts	  = 0,
-	.line_time_ns	  = 0,
-	.timing		  = {2, 6, 2, 6, 0},
-	.term		  = {1, 1},
-	.black_level	  = 0,
-    },
-    {
-	.regs		  = adv7282_ntsc,
-	.num_regs	  = NUM_ELEMENTS(adv7282_ntsc),
-	.width		  = 720,
-	.height		  = 480,
-	.encoding	  = MMAL_ENCODING_UYVY,
-	.order		  = 0,
-	.native_bit_depth = 0,
-	.image_id	  = 0x1E,
-	.data_lanes	  = 1,
-	.min_vts	  = 0,
-	.line_time_ns	  = 0,
-	.timing		  = {2, 6, 2, 6, 0},
-	.term		  = {1, 1},
-	.black_level	  = 0,
-    },
+	{
+	    .regs = adv7282_pal,
+	    .num_regs = NUM_ELEMENTS(adv7282_pal),
+	    .width = 720,
+	    .height = 576,
+	    .encoding = MMAL_ENCODING_UYVY,
+	    .order = 0,
+	    .native_bit_depth = 0,
+	    .image_id = 0x1E,
+	    .data_lanes = 1,
+	    .min_vts = 0,
+	    .line_time_ns = 0,
+	    .timing = { 2, 6, 2, 6, 0 },
+	    .term = { 1, 1 },
+	    .black_level = 0,
+	},
+	{
+	    .regs = adv7282_ntsc,
+	    .num_regs = NUM_ELEMENTS(adv7282_ntsc),
+	    .width = 720,
+	    .height = 480,
+	    .encoding = MMAL_ENCODING_UYVY,
+	    .order = 0,
+	    .native_bit_depth = 0,
+	    .image_id = 0x1E,
+	    .data_lanes = 1,
+	    .min_vts = 0,
+	    .line_time_ns = 0,
+	    .timing = { 2, 6, 2, 6, 0 },
+	    .term = { 1, 1 },
+	    .black_level = 0,
+	},
 };
 
 struct sensor_regs adv7282_stop[] = {
-    // adv7180_set_power
-    SET_BASE,
-    adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_OFF),
-    SET_CSI,
-    adv7180_csi_write(state, 0x00, 0x80),
+	// adv7180_set_power
+	SET_BASE,
+	adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_OFF),
+	SET_CSI,
+	adv7180_csi_write(state, 0x00, 0x80),
 };
 
 // ID register settings taken from
 // http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1298623.html
 struct sensor_def adv7282 = {
-    .name	   = "adv7282",
-    .modes	   = adv7282_modes,
-    .num_modes	   = NUM_ELEMENTS(adv7282_modes),
-    .stop	   = adv7282_stop,
-    .num_stop_regs = NUM_ELEMENTS(adv7282_stop),
+	.name = "adv7282",
+	.modes = adv7282_modes,
+	.num_modes = NUM_ELEMENTS(adv7282_modes),
+	.stop = adv7282_stop,
+	.num_stop_regs = NUM_ELEMENTS(adv7282_stop),
 
-    .i2c_addr	      = ADV7180_DEFAULT_BASE_I2C_ADDR,
-    .i2c_addressing   = 1,
-    .i2c_ident_length = 1,
-    .i2c_ident_reg    = 0x1100,
-    .i2c_ident_value  = 0x42,
+	.i2c_addr = ADV7180_DEFAULT_BASE_I2C_ADDR,
+	.i2c_addressing = 1,
+	.i2c_ident_length = 1,
+	.i2c_ident_reg = 0x1100,
+	.i2c_ident_value = 0x42,
 
-    .vflip_reg	   = 0,
-    .vflip_reg_bit = 0,
-    .hflip_reg	   = 0,
-    .hflip_reg_bit = 0,
+	.vflip_reg = 0,
+	.vflip_reg_bit = 0,
+	.hflip_reg = 0,
+	.hflip_reg_bit = 0,
 
-    .exposure_reg	   = 0,
-    .exposure_reg_num_bits = 0,
+	.exposure_reg = 0,
+	.exposure_reg_num_bits = 0,
 
-    .gain_reg	       = 0,
-    .gain_reg_num_bits = 0,
+	.gain_reg = 0,
+	.gain_reg_num_bits = 0,
 };
 
 #endif
