@@ -30,13 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "interface/vctypes/vc_image_types.h"
 
-#define BRCM_ID_SIG    0x4D435242 /* 'BRCM' */
+#define BRCM_ID_SIG 0x4D435242 /* 'BRCM' */
 #define HEADER_VERSION 111
 
 #define BRCM_RAW_HEADER_LENGTH 32768 // 1024
 
-struct brcm_camera_mode
-{
+struct brcm_camera_mode {
 	uint8_t name[32];
 	uint16_t width;
 	uint16_t height;
@@ -49,11 +48,10 @@ struct brcm_camera_mode
 	uint8_t bayer_format;
 };
 
-struct brcm_raw_header
-{
-	uint32_t id;	       // Must be set to "BRCM"
-	uint32_t version;      // Header version id
-	uint32_t offset;       // Offset to the image data
+struct brcm_raw_header {
+	uint32_t id; // Must be set to "BRCM"
+	uint32_t version; // Header version id
+	uint32_t offset; // Offset to the image data
 	uint32_t preamble_pad; // pad to address 16
 
 	// offset 16 0x10

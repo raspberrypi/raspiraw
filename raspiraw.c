@@ -59,14 +59,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "raw_header.h"
 
 #define DEFAULT_I2C_DEVICE 10
-#define ALT_I2C_DEVICE	   0
+#define ALT_I2C_DEVICE 0
 
 #define I2C_DEVICE_NAME_LEN 13 // "/dev/i2c-XXX"+NULL
 
 struct brcm_raw_header *brcm_header = NULL;
 
-enum bayer_order
-{
+enum bayer_order {
 	// Carefully ordered so that an hflip is ^1,
 	// and a vflip is ^2.
 	BAYER_ORDER_BGGR,
@@ -75,14 +74,12 @@ enum bayer_order
 	BAYER_ORDER_RGGB
 };
 
-struct sensor_regs
-{
+struct sensor_regs {
 	uint16_t reg;
 	uint16_t data;
 };
 
-struct mode_def
-{
+struct mode_def {
 	struct sensor_regs *regs;
 	int num_regs;
 	int width;
@@ -101,8 +98,7 @@ struct mode_def
 	int binning; /* Binning or skipping factor */
 };
 
-struct raspiraw_crop
-{
+struct raspiraw_crop {
 	int hinc;
 	int vinc;
 	int width;
@@ -111,8 +107,7 @@ struct raspiraw_crop
 	int top;
 };
 
-struct sensor_def
-{
+struct sensor_def {
 	char *name;
 	struct sensor_regs *common_init;
 	int num_common_init;
@@ -121,23 +116,23 @@ struct sensor_def
 	struct sensor_regs *stop;
 	int num_stop_regs;
 
-	uint8_t i2c_addr;   // Device I2C slave address
+	uint8_t i2c_addr; // Device I2C slave address
 	int i2c_addressing; // Length of register address values
-	int i2c_data_size;  // Length of register data to write
+	int i2c_data_size; // Length of register data to write
 
 	//  Detecting the device
-	int i2c_ident_length;	  // Length of I2C ID register
-	uint16_t i2c_ident_reg;	  // ID register address
+	int i2c_ident_length; // Length of I2C ID register
+	uint16_t i2c_ident_reg; // ID register address
 	uint16_t i2c_ident_value; // ID register value
 
 	// Flip configuration
-	uint16_t vflip_reg;		   // Register for VFlip
-	int vflip_reg_bit;		   // Bit in that register for VFlip
-	uint16_t hflip_reg;		   // Register for HFlip
-	int hflip_reg_bit;		   // Bit in that register for HFlip
+	uint16_t vflip_reg; // Register for VFlip
+	int vflip_reg_bit; // Bit in that register for VFlip
+	uint16_t hflip_reg; // Register for HFlip
+	int hflip_reg_bit; // Bit in that register for HFlip
 	int flips_dont_change_bayer_order; // Some sensors do not change the
-					   // Bayer order by adjusting X/Y
-					   // starts to compensate.
+		// Bayer order by adjusting X/Y
+		// starts to compensate.
 
 	uint16_t exposure_reg;
 	int exposure_reg_num_bits;
@@ -154,12 +149,11 @@ struct sensor_def
 // The process first loads the cleaned up dump of the registers
 // than updates the known registers to the proper values
 // based on: http://www.seeedstudio.com/wiki/images/3/3c/Ov5647_full.pdf
-enum operation
-{
+enum operation {
 	EQUAL, // Set bit to value
-	SET,   // Set bit
+	SET, // Set bit
 	CLEAR, // Clear bit
-	XOR    // Xor bit
+	XOR // Xor bit
 };
 
 void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op);
@@ -173,46 +167,44 @@ void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int v
 
 const struct sensor_def *sensors[] = { &ov5647, &imx219, &adv7282, &imx477, NULL };
 
-enum
-{
-	CommandHelp,
-	CommandMode,
-	CommandHFlip,
-	CommandVFlip,
-	CommandExposure,
-	CommandGain,
-	CommandOutput,
-	CommandWriteHeader,
-	CommandTimeout,
-	CommandSaveRate,
-	CommandBitDepth,
-	CommandCameraNum,
-	CommandExposureus,
-	CommandI2cBus,
-	CommandAwbGains,
-	CommandRegs,
-	CommandHinc,
-	CommandVinc,
-	CommandFps,
-	CommandWidth,
-	CommandHeight,
-	CommandLeft,
-	CommandTop,
-	CommandVts,
-	CommandLine,
-	CommandWriteHeader0,
-	CommandWriteHeaderG,
-	CommandWriteTimestamps,
-	CommandWriteEmpty,
-	CommandDecodeMetadata,
-	CommandAwb,
-	CommandNoPreview,
-	CommandProcessing,
-	CommandPreview,
-	CommandFullScreen,
-	CommandOpacity,
-	CommandProcessingYUV,
-	CommandOutputYUV,
+enum { CommandHelp,
+       CommandMode,
+       CommandHFlip,
+       CommandVFlip,
+       CommandExposure,
+       CommandGain,
+       CommandOutput,
+       CommandWriteHeader,
+       CommandTimeout,
+       CommandSaveRate,
+       CommandBitDepth,
+       CommandCameraNum,
+       CommandExposureus,
+       CommandI2cBus,
+       CommandAwbGains,
+       CommandRegs,
+       CommandHinc,
+       CommandVinc,
+       CommandFps,
+       CommandWidth,
+       CommandHeight,
+       CommandLeft,
+       CommandTop,
+       CommandVts,
+       CommandLine,
+       CommandWriteHeader0,
+       CommandWriteHeaderG,
+       CommandWriteTimestamps,
+       CommandWriteEmpty,
+       CommandDecodeMetadata,
+       CommandAwb,
+       CommandNoPreview,
+       CommandProcessing,
+       CommandPreview,
+       CommandFullScreen,
+       CommandOpacity,
+       CommandProcessingYUV,
+       CommandOutputYUV,
 };
 
 static COMMAND_LIST cmdline_commands[] = {
@@ -258,8 +250,7 @@ static COMMAND_LIST cmdline_commands[] = {
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
 
-typedef struct pts_node
-{
+typedef struct pts_node {
 	int idx;
 	int64_t pts;
 	struct pts_node *nxt;
@@ -267,8 +258,7 @@ typedef struct pts_node
 
 #define DEFAULT_PREVIEW_LAYER 3
 
-typedef struct raspiraw_params
-{
+typedef struct raspiraw_params {
 	struct raspiraw_crop crop;
 	int mode;
 	int hflip;
@@ -299,7 +289,7 @@ typedef struct raspiraw_params
 	int no_preview;
 	int processing;
 	int fullscreen; // 0 is use previewRect, non-zero to use full screen
-	int opacity;	// Opacity of window - 0 = transparent, 255 = opaque
+	int opacity; // Opacity of window - 0 = transparent, 255 = opaque
 	MMAL_RECT_T
 	preview_window; // Destination rectangle for the preview window.
 	int capture_yuv;
@@ -307,8 +297,7 @@ typedef struct raspiraw_params
 	int processing_yuv;
 } RASPIRAW_PARAMS_T;
 
-typedef struct
-{
+typedef struct {
 	RASPIRAW_PARAMS_T *cfg;
 
 	MMAL_POOL_T *rawcam_pool;
@@ -325,8 +314,7 @@ typedef struct
 	int processing_thread_quit;
 } RASPIRAW_CALLBACK_T;
 
-typedef struct
-{
+typedef struct {
 	RASPIRAW_PARAMS_T *cfg;
 
 	MMAL_POOL_T *isp_op_pool;
@@ -348,21 +336,20 @@ static int i2c_rd(int fd, uint8_t i2c_addr, uint16_t reg, uint8_t *values, uint3
 	struct i2c_rdwr_ioctl_data msgset;
 	struct i2c_msg msgs[2] = {
 		{
-		    .addr = i2c_addr,
-		    .flags = 0,
-		    .len = 2,
-		    .buf = buf,
+			.addr = i2c_addr,
+			.flags = 0,
+			.len = 2,
+			.buf = buf,
 		},
 		{
-		    .addr = i2c_addr,
-		    .flags = I2C_M_RD,
-		    .len = n,
-		    .buf = values,
+			.addr = i2c_addr,
+			.flags = I2C_M_RD,
+			.len = n,
+			.buf = values,
 		},
 	};
 
-	if (sensor->i2c_addressing == 1)
-	{
+	if (sensor->i2c_addressing == 1) {
 		msgs[0].len = 1;
 	}
 	msgset.msgs = msgs;
@@ -382,18 +369,14 @@ const struct sensor_def *probe_sensor(int fd)
 	const struct sensor_def **sensor_list = &sensors[0];
 	const struct sensor_def *sensor = NULL;
 
-	while (*sensor_list != NULL)
-	{
+	while (*sensor_list != NULL) {
 		uint16_t reg = 0;
 		sensor = *sensor_list;
 		vcos_log_error("Probing sensor %s on addr %02X", sensor->name, sensor->i2c_addr);
-		if (sensor->i2c_ident_length <= 2)
-		{
+		if (sensor->i2c_ident_length <= 2) {
 			if (!i2c_rd(fd, sensor->i2c_addr, sensor->i2c_ident_reg, (uint8_t *)&reg,
-				    sensor->i2c_ident_length, sensor))
-			{
-				if (reg == sensor->i2c_ident_value)
-				{
+				    sensor->i2c_ident_length, sensor)) {
+				if (reg == sensor->i2c_ident_value) {
 					vcos_log_error("Found sensor %s at address %02X", sensor->name,
 						       sensor->i2c_addr);
 					break;
@@ -409,52 +392,38 @@ const struct sensor_def *probe_sensor(int fd)
 void send_regs(int fd, const struct sensor_def *sensor, const struct sensor_regs *regs, int num_regs)
 {
 	int i;
-	for (i = 0; i < num_regs; i++)
-	{
-		if (regs[i].reg == 0xFFFF)
-		{
-			if (ioctl(fd, I2C_SLAVE_FORCE, regs[i].data) < 0)
-			{
+	for (i = 0; i < num_regs; i++) {
+		if (regs[i].reg == 0xFFFF) {
+			if (ioctl(fd, I2C_SLAVE_FORCE, regs[i].data) < 0) {
 				vcos_log_error("Failed to set I2C address to %02X", regs[i].data);
 			}
-		}
-		else if (regs[i].reg == 0xFFFE)
-		{
+		} else if (regs[i].reg == 0xFFFE) {
 			vcos_sleep(regs[i].data);
-		}
-		else
-		{
-			if (sensor->i2c_addressing == 1)
-			{
+		} else {
+			if (sensor->i2c_addressing == 1) {
 				unsigned char msg[3] = { regs[i].reg, regs[i].data & 0xFF };
 				int len = 2;
 
-				if (sensor->i2c_data_size == 2)
-				{
+				if (sensor->i2c_data_size == 2) {
 					msg[1] = (regs[i].data >> 8) & 0xFF;
 					msg[2] = regs[i].data & 0xFF;
 					len = 3;
 				}
-				if (write(fd, msg, len) != len)
-				{
+				if (write(fd, msg, len) != len) {
 					vcos_log_error("Failed to write register index %d "
 						       "(%02X val %02X)",
 						       i, regs[i].reg, regs[i].data);
 				}
-			}
-			else
-			{
+			} else {
 				unsigned char msg[4] = { regs[i].reg >> 8, regs[i].reg, regs[i].data };
 				int len = 3;
 
-				if (sensor->i2c_data_size == 2)
-				{
+				if (sensor->i2c_data_size == 2) {
 					msg[2] = regs[i].data >> 8;
 					msg[3] = regs[i].data;
 					len = 4;
 				}
-				if (write(fd, msg, len) != len)
-				{
+				if (write(fd, msg, len) != len) {
 					vcos_log_error("Failed to write register index %d", i);
 				}
 			}
@@ -464,8 +433,7 @@ void send_regs(int fd, const struct sensor_def *sensor, const struct sensor_regs
 
 void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mode, int fd)
 {
-	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0)
-	{
+	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0) {
 		vcos_log_error("Failed to set I2C address");
 		return;
 	}
@@ -477,8 +445,7 @@ void start_camera_streaming(const struct sensor_def *sensor, struct mode_def *mo
 
 void stop_camera_streaming(const struct sensor_def *sensor, int fd)
 {
-	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0)
-	{
+	if (ioctl(fd, I2C_SLAVE_FORCE, sensor->i2c_addr) < 0) {
 		vcos_log_error("Failed to set I2C address");
 		return;
 	}
@@ -501,10 +468,9 @@ void stop_camera_streaming(const struct sensor_def *sensor, int fd)
 MMAL_STATUS_T create_filenames(char **finalName, char *pattern, int frame)
 {
 	*finalName = NULL;
-	if (0 > asprintf(finalName, pattern, frame))
-	{
+	if (0 > asprintf(finalName, pattern, frame)) {
 		return MMAL_ENOMEM; // It may be some other error, but it is not
-				    // worth getting it right
+			// worth getting it right
 	}
 	return MMAL_SUCCESS;
 }
@@ -515,11 +481,8 @@ void decodemetadataline(uint8_t *data, int bpp)
 	uint8_t tag, dta;
 	uint16_t reg = -1;
 
-	if (data[0] == 0x0a)
-	{
-
-		while (data[c] != 0x07)
-		{
+	if (data[0] == 0x0a) {
+		while (data[c] != 0x07) {
 			tag = data[c++];
 			if (bpp == 10 && (c % 5) == 4)
 				c++;
@@ -538,15 +501,13 @@ void decodemetadataline(uint8_t *data, int bpp)
 			else
 				vcos_log_error("Metadata decode failed %x %x %x", reg, tag, dta);
 		}
-	}
-	else
+	} else
 		vcos_log_error("Doesn't looks like register set %x!=0x0a", data[0]);
 }
 
 int encoding_to_bpp(uint32_t encoding)
 {
-	switch (encoding)
-	{
+	switch (encoding) {
 	case MMAL_ENCODING_BAYER_SBGGR10P:
 	case MMAL_ENCODING_BAYER_SGBRG10P:
 	case MMAL_ENCODING_BAYER_SGRBG10P:
@@ -566,8 +527,7 @@ static void buffers_to_rawcam(RASPIRAW_CALLBACK_T *dev)
 {
 	MMAL_BUFFER_HEADER_T *buffer;
 
-	while ((buffer = mmal_queue_get(dev->rawcam_pool->queue)) != NULL)
-	{
+	while ((buffer = mmal_queue_get(dev->rawcam_pool->queue)) != NULL) {
 		mmal_port_send_buffer(dev->rawcam_output, buffer);
 		// vcos_log_error("Buffer %p to rawcam\n", buffer);
 	}
@@ -582,31 +542,25 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 
 	// vcos_log_error("Buffer %p returned, filled %d, timestamp %llu, flags %04X", buffer, buffer->length,
 	// buffer->pts, buffer->flags);
-	if (cfg->capture)
-	{
-
-		if (!(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) && (((count++) % cfg->saverate) == 0))
-		{
+	if (cfg->capture) {
+		if (!(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) && (((count++) % cfg->saverate) == 0)) {
 			// Save every Nth frame
 			// SD card access is too slow to do much more.
 			FILE *file;
 			char *filename = NULL;
-			if (create_filenames(&filename, cfg->output, count) == MMAL_SUCCESS)
-			{
+			if (create_filenames(&filename, cfg->output, count) == MMAL_SUCCESS) {
 				file = fopen(filename, "wb");
-				if (file)
-				{
+				if (file) {
 					if (cfg->ptso) // make sure previous
-						       // malloc() was
-						       // successful
+					// malloc() was
+					// successful
 					{
 						cfg->ptso->idx = count;
 						cfg->ptso->pts = buffer->pts;
 						cfg->ptso->nxt = malloc(sizeof(*cfg->ptso->nxt));
 						cfg->ptso = cfg->ptso->nxt;
 					}
-					if (!cfg->write_empty)
-					{
+					if (!cfg->write_empty) {
 						if (cfg->write_header)
 							fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
 						fwrite(buffer->user_data, buffer->length, 1, file);
@@ -618,8 +572,7 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 		}
 	}
 
-	if (cfg->decodemetadata && (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
-	{
+	if (cfg->decodemetadata && (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO)) {
 		int bpp = encoding_to_bpp(port->format->encoding);
 		int pitch = mmal_encoding_width_to_stride(port->format->encoding, port->format->es->video.width);
 
@@ -630,13 +583,10 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 	}
 
 	/* Pass the buffers off to any other MMAL sinks. */
-	if (buffer->length && !(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
-	{
-		if (dev->isp_ip)
-		{
+	if (buffer->length && !(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO)) {
+		if (dev->isp_ip) {
 			MMAL_BUFFER_HEADER_T *out = mmal_queue_get(dev->isp_ip_pool->queue);
-			if (out)
-			{
+			if (out) {
 				// vcos_log_error("replicate buffer %p for isp", buffer);
 				mmal_buffer_header_replicate(out, buffer);
 				out->data = buffer->data;
@@ -650,8 +600,7 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 		}
 
 		/* Pass to the AWB thread */
-		if (dev->awb_queue)
-		{
+		if (dev->awb_queue) {
 			/* Relying on the AWB thread to release this
 			 * buffer`refcount */
 			mmal_buffer_header_acquire(buffer);
@@ -660,8 +609,7 @@ static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 		}
 
 		/* Pass to the processing thread */
-		if (dev->processing_queue)
-		{
+		if (dev->processing_queue) {
 			/* Relying on the processing thread to release this
 			 * buffer`refcount */
 			mmal_buffer_header_acquire(buffer);
@@ -679,8 +627,7 @@ static void buffers_to_isp_op(RASPIRAW_ISP_CALLBACK_T *dev)
 {
 	MMAL_BUFFER_HEADER_T *buffer;
 
-	while ((buffer = mmal_queue_get(dev->isp_op_pool->queue)) != NULL)
-	{
+	while ((buffer = mmal_queue_get(dev->isp_op_pool->queue)) != NULL) {
 		mmal_port_send_buffer(dev->isp_output, buffer);
 		// vcos_log_error("Buffer %p to isp op\n", buffer);
 	}
@@ -695,22 +642,16 @@ static void yuv_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 
 	// vcos_log_error("Buffer %p returned, filled %d, timestamp %llu, flags
 	// %04X", buffer, buffer->length, buffer->pts, buffer->flags);
-	if (cfg->capture_yuv)
-	{
-
-		if (!(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) && (((count++) % cfg->saverate) == 0))
-		{
+	if (cfg->capture_yuv) {
+		if (!(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO) && (((count++) % cfg->saverate) == 0)) {
 			// Save every Nth frame
 			// SD card access is too slow to do much more.
 			FILE *file;
 			char *filename = NULL;
-			if (create_filenames(&filename, cfg->output_yuv, count) == MMAL_SUCCESS)
-			{
+			if (create_filenames(&filename, cfg->output_yuv, count) == MMAL_SUCCESS) {
 				file = fopen(filename, "wb");
-				if (file)
-				{
-					if (!cfg->write_empty)
-					{
+				if (file) {
+					if (!cfg->write_empty) {
 						fwrite(buffer->user_data, buffer->length, 1, file);
 					}
 					fclose(file);
@@ -721,13 +662,10 @@ static void yuv_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 	}
 
 	/* Pass the buffers off to any other MMAL sinks. */
-	if (buffer->length && !(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO))
-	{
-		if (yuv_cb->vr_ip)
-		{
+	if (buffer->length && !(buffer->flags & MMAL_BUFFER_HEADER_FLAG_CODECSIDEINFO)) {
+		if (yuv_cb->vr_ip) {
 			MMAL_BUFFER_HEADER_T *out = mmal_queue_get(yuv_cb->vr_ip_pool->queue);
-			if (out)
-			{
+			if (out) {
 				// vcos_log_error("replicate buffer %p for vr",
 				// buffer);
 				mmal_buffer_header_replicate(out, buffer);
@@ -742,8 +680,7 @@ static void yuv_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 		}
 
 		/* Pass to the processing thread */
-		if (yuv_cb->processing_yuv_queue)
-		{
+		if (yuv_cb->processing_yuv_queue) {
 			/* Relying on the processing thread to release this
 			 * buffer's refcount */
 			mmal_buffer_header_acquire(buffer);
@@ -780,14 +717,12 @@ uint32_t order_and_bit_depth_to_encoding(enum bayer_order order, int bit_depth)
 		MMAL_ENCODING_BAYER_SGRBG16,
 		MMAL_ENCODING_BAYER_SRGGB16,
 	};
-	if (order < 0 || order > 3)
-	{
+	if (order < 0 || order > 3) {
 		vcos_log_error("order out of range - %d", order);
 		return 0;
 	}
 
-	switch (bit_depth)
-	{
+	switch (bit_depth) {
 	case 8:
 		return depth8[order];
 	case 10:
@@ -818,15 +753,13 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 	int valid = 1;
 	int i;
 
-	for (i = 1; i < argc && valid; i++)
-	{
+	for (i = 1; i < argc && valid; i++) {
 		int command_id, num_parameters, len;
 
 		if (!argv[i])
 			continue;
 
-		if (argv[i][0] != '-')
-		{
+		if (argv[i][0] != '-') {
 			valid = 0;
 			continue;
 		}
@@ -835,7 +768,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 		valid = 1;
 
 		command_id =
-		    raspicli_get_command_id(cmdline_commands, cmdline_commands_size, &argv[i][1], &num_parameters);
+			raspicli_get_command_id(cmdline_commands, cmdline_commands_size, &argv[i][1], &num_parameters);
 
 		// If we found a command but are missing a parameter, continue
 		// (and we will drop out of the loop)
@@ -843,8 +776,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 			continue;
 
 		//  We are now dealing with a command line option
-		switch (command_id)
-		{
+		switch (command_id) {
 		case CommandHelp:
 			raspicli_display_help(cmdline_commands, cmdline_commands_size);
 			// exit straight away if help requested
@@ -882,23 +814,19 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 		case CommandOutput: // output filename
 		{
 			len = strlen(argv[i + 1]);
-			if (len)
-			{
+			if (len) {
 				// We use sprintf to append the frame number for
 				// timelapse mode Ensure that any %<char> is
 				// either %% or %d.
 				const char *percent = argv[i + 1];
-				while (valid && *percent && (percent = strchr(percent, '%')) != NULL)
-				{
+				while (valid && *percent && (percent = strchr(percent, '%')) != NULL) {
 					int digits = 0;
 					percent++;
-					while (isdigit(*percent))
-					{
+					while (isdigit(*percent)) {
 						percent++;
 						digits++;
 					}
-					if (!((*percent == '%' && !digits) || *percent == 'd'))
-					{
+					if (!((*percent == '%' && !digits) || *percent == 'd')) {
 						valid = 0;
 						fprintf(stderr, "Filename contains %% "
 								"characters, but not "
@@ -908,22 +836,17 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					percent++;
 				}
 				cfg->output = malloc(len + 10); // leave enough space for any timelapse
-								// generated changes to filename
-				if (cfg->output)
-				{
+					// generated changes to filename
+				if (cfg->output) {
 					strncpy(cfg->output, argv[i + 1], len + 1);
 					i++;
 					cfg->capture = 1;
-				}
-				else
-				{
+				} else {
 					fprintf(stderr, "internal error - "
 							"allocation fail\n");
 					valid = 0;
 				}
-			}
-			else
-			{
+			} else {
 				valid = 0;
 			}
 			break;
@@ -934,38 +857,30 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 			break;
 
 		case CommandTimeout: // Time to run for in milliseconds
-			if (sscanf(argv[i + 1], "%u", &cfg->timeout) == 1)
-			{
+			if (sscanf(argv[i + 1], "%u", &cfg->timeout) == 1) {
 				i++;
-			}
-			else
+			} else
 				valid = 0;
 			break;
 
 		case CommandSaveRate:
-			if (sscanf(argv[i + 1], "%u", &cfg->saverate) == 1)
-			{
+			if (sscanf(argv[i + 1], "%u", &cfg->saverate) == 1) {
 				i++;
-			}
-			else
+			} else
 				valid = 0;
 			break;
 
 		case CommandBitDepth:
-			if (sscanf(argv[i + 1], "%u", &cfg->bit_depth) == 1)
-			{
+			if (sscanf(argv[i + 1], "%u", &cfg->bit_depth) == 1) {
 				i++;
-			}
-			else
+			} else
 				valid = 0;
 			break;
 
 		case CommandCameraNum:
-			if (sscanf(argv[i + 1], "%u", &cfg->camera_num) == 1)
-			{
+			if (sscanf(argv[i + 1], "%u", &cfg->camera_num) == 1) {
 				i++;
-				if (cfg->camera_num != 0 && cfg->camera_num != 1)
-				{
+				if (cfg->camera_num != 0 && cfg->camera_num != 1) {
 					fprintf(stderr,
 						"Invalid camera number "
 						"specified (%d)."
@@ -973,8 +888,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 						cfg->camera_num);
 					valid = 0;
 				}
-			}
-			else
+			} else
 				valid = 0;
 			break;
 
@@ -992,8 +906,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 				i++;
 			break;
 
-		case CommandAwbGains:
-		{
+		case CommandAwbGains: {
 			double r, b;
 			int args;
 
@@ -1134,7 +1047,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 		}
 
 		case CommandFullScreen: // Want full screen preview mode
-					// (overrides display rect)
+			// (overrides display rect)
 			cfg->fullscreen = 1;
 
 			i++;
@@ -1154,23 +1067,19 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 		case CommandOutputYUV: // output filename
 		{
 			len = strlen(argv[i + 1]);
-			if (len)
-			{
+			if (len) {
 				// We use sprintf to append the frame number for
 				// timelapse mode Ensure that any %<char> is
 				// either %% or %d.
 				const char *percent = argv[i + 1];
-				while (valid && *percent && (percent = strchr(percent, '%')) != NULL)
-				{
+				while (valid && *percent && (percent = strchr(percent, '%')) != NULL) {
 					int digits = 0;
 					percent++;
-					while (isdigit(*percent))
-					{
+					while (isdigit(*percent)) {
 						percent++;
 						digits++;
 					}
-					if (!((*percent == '%' && !digits) || *percent == 'd'))
-					{
+					if (!((*percent == '%' && !digits) || *percent == 'd')) {
 						valid = 0;
 						fprintf(stderr, "Filename contains %% "
 								"characters, but not "
@@ -1180,22 +1089,17 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 					percent++;
 				}
 				cfg->output_yuv = malloc(len + 10); // leave enough space for any timelapse
-								    // generated changes to filename
-				if (cfg->output_yuv)
-				{
+					// generated changes to filename
+				if (cfg->output_yuv) {
 					strncpy(cfg->output_yuv, argv[i + 1], len + 1);
 					i++;
 					cfg->capture_yuv = 1;
-				}
-				else
-				{
+				} else {
 					fprintf(stderr, "internal error - "
 							"allocation fail\n");
 					valid = 0;
 				}
-			}
-			else
-			{
+			} else {
 				valid = 0;
 			}
 			break;
@@ -1207,8 +1111,7 @@ static int parse_cmdline(int argc, char **argv, RASPIRAW_PARAMS_T *cfg)
 		}
 	}
 
-	if (!valid)
-	{
+	if (!valid) {
 		fprintf(stderr, "Invalid command line option (%s)\n", argv[i - 1]);
 		return 1;
 	}
@@ -1224,8 +1127,7 @@ uint32_t get_pixel(int x, int y, uint32_t encoding, int stride, uint8_t *data)
 	const uint8_t raw12_masks[2] = { 0x0f, 0xf0 };
 	const uint8_t raw12_shifts[2] = { 0, 4 };
 
-	switch (encoding)
-	{
+	switch (encoding) {
 	case MMAL_ENCODING_BAYER_SBGGR8:
 	case MMAL_ENCODING_BAYER_SGBRG8:
 	case MMAL_ENCODING_BAYER_SGRBG8:
@@ -1252,8 +1154,7 @@ uint32_t get_pixel(int x, int y, uint32_t encoding, int stride, uint8_t *data)
 	case MMAL_ENCODING_BAYER_SBGGR16:
 	case MMAL_ENCODING_BAYER_SGBRG16:
 	case MMAL_ENCODING_BAYER_SGRBG16:
-	case MMAL_ENCODING_BAYER_SRGGB16:
-	{
+	case MMAL_ENCODING_BAYER_SRGGB16: {
 		/* CHECK ME: are the MSB and LSB the right way around? */
 		uint16_t *data16 = (uint16_t *)data;
 		val = data16[x + (y * stride / 2)];
@@ -1263,13 +1164,7 @@ uint32_t get_pixel(int x, int y, uint32_t encoding, int stride, uint8_t *data)
 	return val;
 }
 
-enum channels
-{
-	RED,
-	GREEN1,
-	GREEN2,
-	BLUE
-};
+enum channels { RED, GREEN1, GREEN2, BLUE };
 
 uint64_t get_channel(enum channels chan, uint32_t encoding, uint64_t *sums)
 {
@@ -1278,8 +1173,7 @@ uint64_t get_channel(enum channels chan, uint32_t encoding, uint64_t *sums)
 	const int gbrg[4] = { GREEN1, BLUE, RED, GREEN2 };
 	const int grbg[4] = { GREEN1, RED, BLUE, GREEN2 };
 
-	switch (encoding)
-	{
+	switch (encoding) {
 	case MMAL_ENCODING_BAYER_SBGGR8:
 	case MMAL_ENCODING_BAYER_SBGGR10P:
 	case MMAL_ENCODING_BAYER_SBGGR12P:
@@ -1317,8 +1211,7 @@ static void run_awb_calcs(RASPIRAW_CALLBACK_T *dev, MMAL_BUFFER_HEADER_T *buffer
 	uint32_t encoding = dev->rawcam_output->format->encoding;
 	int stride = mmal_encoding_width_to_stride(encoding, dev->rawcam_output->format->es->video.width);
 
-	if (!dev->wb_gains.hdr.id)
-	{
+	if (!dev->wb_gains.hdr.id) {
 		dev->wb_gains.hdr.id = MMAL_PARAMETER_CUSTOM_AWB_GAINS;
 		dev->wb_gains.hdr.size = sizeof(dev->wb_gains);
 		dev->wb_gains.r_gain.num = 256;
@@ -1327,10 +1220,8 @@ static void run_awb_calcs(RASPIRAW_CALLBACK_T *dev, MMAL_BUFFER_HEADER_T *buffer
 		dev->wb_gains.b_gain.den = 256;
 	}
 
-	for (x = 8; x < dev->rawcam_output->format->es->video.crop.width; x += 16)
-	{
-		for (y = 8; y < dev->rawcam_output->format->es->video.crop.height; y += 16)
-		{
+	for (x = 8; x < dev->rawcam_output->format->es->video.crop.width; x += 16) {
+		for (y = 8; y < dev->rawcam_output->format->es->video.crop.height; y += 16) {
 			sums[0] += get_pixel(x, y, encoding, stride, buffer->user_data);
 			sums[1] += get_pixel(x + 1, y, encoding, stride, buffer->user_data);
 			sums[2] += get_pixel(x, y + 1, encoding, stride, buffer->user_data);
@@ -1356,15 +1247,13 @@ static void *awb_thread_task(void *arg)
 	RASPIRAW_CALLBACK_T *dev = (RASPIRAW_CALLBACK_T *)arg;
 	MMAL_BUFFER_HEADER_T *buffer;
 
-	while (!dev->awb_thread_quit)
-	{
+	while (!dev->awb_thread_quit) {
 		// Being lazy and using a timed wait instead of setting up a
 		// mechanism for skipping this when destroying the thread
 		buffer = mmal_queue_timedwait(dev->awb_queue, 1000);
 		if (!buffer)
 			continue;
-		if (!mmal_queue_length(dev->awb_queue))
-		{
+		if (!mmal_queue_length(dev->awb_queue)) {
 			/* If more buffers in the queue, loop so we're working
 			 * on the latest one
 			 */
@@ -1383,15 +1272,13 @@ static void *processing_thread_task(void *arg)
 	RASPIRAW_CALLBACK_T *dev = (RASPIRAW_CALLBACK_T *)arg;
 	MMAL_BUFFER_HEADER_T *buffer;
 
-	while (!dev->processing_thread_quit)
-	{
+	while (!dev->processing_thread_quit) {
 		// Being lazy and using a timed wait instead of setting up a
 		// mechanism for skipping this when destroying the thread
 		buffer = mmal_queue_timedwait(dev->processing_queue, 1000);
 		if (!buffer)
 			continue;
-		if (!mmal_queue_length(dev->processing_queue))
-		{
+		if (!mmal_queue_length(dev->processing_queue)) {
 			/* If more buffers in the queue, loop so we're working
 			 * on the latest one
 			 */
@@ -1420,15 +1307,13 @@ static void *processing_yuv_thread_task(void *arg)
 	RASPIRAW_ISP_CALLBACK_T *yuv_cb = (RASPIRAW_ISP_CALLBACK_T *)arg;
 	MMAL_BUFFER_HEADER_T *buffer;
 
-	while (!yuv_cb->processing_yuv_thread_quit)
-	{
+	while (!yuv_cb->processing_yuv_thread_quit) {
 		// Being lazy and using a timed wait instead of setting up a
 		// mechanism for skipping this when destroying the thread
 		buffer = mmal_queue_timedwait(yuv_cb->processing_yuv_queue, 1000);
 		if (!buffer)
 			continue;
-		if (!mmal_queue_length(yuv_cb->processing_yuv_queue))
-		{
+		if (!mmal_queue_length(yuv_cb->processing_yuv_queue)) {
 			/* If more buffers in the queue, loop so we're working
 			 * on the latest one
 			 */
@@ -1490,8 +1375,7 @@ int main(int argc, char **argv)
 	bcm_host_init();
 	vcos_log_register("RaspiRaw", VCOS_LOG_CATEGORY);
 
-	if (argc == 1)
-	{
+	if (argc == 1) {
 		fprintf(stdout, "\n%s Camera App %s\n\n", basename(argv[0]), VERSION_STRING);
 
 		raspicli_display_help(cmdline_commands, cmdline_commands_size);
@@ -1499,29 +1383,23 @@ int main(int argc, char **argv)
 	}
 
 	// Parse the command line and put options in to our status structure
-	if (parse_cmdline(argc, argv, &cfg))
-	{
+	if (parse_cmdline(argc, argv, &cfg)) {
 		exit(-1);
 	}
 
-	if (cfg.i2c_bus == -1)
-	{
+	if (cfg.i2c_bus == -1) {
 		snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", DEFAULT_I2C_DEVICE);
 		i2c_fd = open(i2c_device_name, O_RDWR);
-		if (!i2c_fd)
-		{
+		if (!i2c_fd) {
 			snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", ALT_I2C_DEVICE);
 			i2c_fd = open(i2c_device_name, O_RDWR);
 		}
-	}
-	else
-	{
+	} else {
 		snprintf(i2c_device_name, sizeof(i2c_device_name), "/dev/i2c-%d", cfg.i2c_bus);
 		i2c_fd = open(i2c_device_name, O_RDWR);
 	}
 
-	if (!i2c_fd)
-	{
+	if (!i2c_fd) {
 		printf("Failed to open I2C device %s\n", i2c_device_name);
 		return -1;
 	}
@@ -1529,39 +1407,33 @@ int main(int argc, char **argv)
 	printf("Using I2C device %s\n", i2c_device_name);
 
 	sensor = probe_sensor(i2c_fd);
-	if (!sensor)
-	{
+	if (!sensor) {
 		vcos_log_error("No sensor found. Aborting");
 		return -1;
 	}
 
-	if (cfg.mode >= 0 && cfg.mode < sensor->num_modes)
-	{
+	if (cfg.mode >= 0 && cfg.mode < sensor->num_modes) {
 		sensor_mode = &sensor->modes[cfg.mode];
 	}
 
-	if (!sensor_mode)
-	{
+	if (!sensor_mode) {
 		vcos_log_error("Invalid mode %d - aborting", cfg.mode);
 		return -2;
 	}
 
-	if (cfg.regs)
-	{
+	if (cfg.regs) {
 		int r, b;
 		char *p, *q;
 
 		p = strtok(cfg.regs, ";");
-		while (p)
-		{
+		while (p) {
 			vcos_assert(strlen(p) > 6);
 			vcos_assert(p[4] == ',');
 			vcos_assert(strlen(p) % 2);
 			p[4] = '\0';
 			q = p + 5;
 			sscanf(p, "%4x", &r);
-			while (*q)
-			{
+			while (*q) {
 				vcos_assert(isxdigit(q[0]));
 				vcos_assert(isxdigit(q[1]));
 
@@ -1578,46 +1450,37 @@ int main(int argc, char **argv)
 	}
 
 	if (cfg.crop.hinc >= 0 || cfg.crop.vinc >= 0 || cfg.crop.width > 0 || cfg.crop.width > 0 || cfg.crop.top >= 0 ||
-	    cfg.crop.left >= 0)
-	{
-		if (sensor->set_crop)
-		{
-			if (sensor->set_crop(sensor, sensor_mode, &cfg.crop))
-			{
+	    cfg.crop.left >= 0) {
+		if (sensor->set_crop) {
+			if (sensor->set_crop(sensor, sensor_mode, &cfg.crop)) {
 				vcos_log_error("Failed setting manual crops. Aborting");
 				return -1;
 			}
-		}
-		else
-		{
+		} else {
 			vcos_log_error("This sensor does not currently support "
 				       "manual cropping settings. Aborting");
 			return -1;
 		}
 	}
 
-	if (cfg.fps > 0)
-	{
+	if (cfg.fps > 0) {
 		int n = 1000000000 / (sensor_mode->line_time_ns * cfg.fps);
 		modReg(sensor_mode, sensor->vts_reg + 0, 0, 7, n >> 8, EQUAL);
 		modReg(sensor_mode, sensor->vts_reg + 1, 0, 7, n & 0xFF, EQUAL);
 	}
 
-	if (cfg.bit_depth == -1)
-	{
+	if (cfg.bit_depth == -1) {
 		cfg.bit_depth = sensor_mode->native_bit_depth;
 	}
 
-	if (cfg.write_headerg && (cfg.bit_depth != sensor_mode->native_bit_depth))
-	{
+	if (cfg.write_headerg && (cfg.bit_depth != sensor_mode->native_bit_depth)) {
 		// needs change after fix for
 		// https://github.com/6by9/raspiraw/issues/2
 		vcos_log_error("--headerG supported for native bit depth only");
 		exit(-1);
 	}
 
-	if (cfg.exposure_us != -1)
-	{
+	if (cfg.exposure_us != -1) {
 		cfg.exposure = ((int64_t)cfg.exposure_us * 1000) / sensor_mode->line_time_ns;
 		vcos_log_error("Setting exposure to %d from time %dus", cfg.exposure, cfg.exposure_us);
 	}
@@ -1627,48 +1490,40 @@ int main(int argc, char **argv)
 		encoding = order_and_bit_depth_to_encoding(sensor_mode->order, cfg.bit_depth);
 	else
 		encoding = sensor_mode->encoding;
-	if (!encoding)
-	{
+	if (!encoding) {
 		vcos_log_error("Failed to map bitdepth %d and order %d into encoding\n", cfg.bit_depth,
 			       sensor_mode->order);
 		return -3;
 	}
 	vcos_log_error("Encoding %08X", encoding);
 
-	if (cfg.awb)
-	{
+	if (cfg.awb) {
 		VCOS_STATUS_T vcos_status;
 		printf("Setup awb thread\n");
 		vcos_status = vcos_thread_create(&awb_thread, "awb-thread", NULL, awb_thread_task, &dev);
-		if (vcos_status != VCOS_SUCCESS)
-		{
+		if (vcos_status != VCOS_SUCCESS) {
 			printf("Failed to create awb thread\n");
 			return -4;
 		}
 		dev.awb_queue = mmal_queue_create();
-		if (!dev.awb_queue)
-		{
+		if (!dev.awb_queue) {
 			printf("Failed to create awb queue\n");
 			return -4;
 		}
-	}
-	else
+	} else
 		printf("No AWB\n");
 
-	if (cfg.processing)
-	{
+	if (cfg.processing) {
 		VCOS_STATUS_T vcos_status;
 		printf("Setup processing thread\n");
 		vcos_status =
-		    vcos_thread_create(&processing_thread, "processing-thread", NULL, processing_thread_task, &dev);
-		if (vcos_status != VCOS_SUCCESS)
-		{
+			vcos_thread_create(&processing_thread, "processing-thread", NULL, processing_thread_task, &dev);
+		if (vcos_status != VCOS_SUCCESS) {
 			printf("Failed to create processing thread\n");
 			return -4;
 		}
 		dev.processing_queue = mmal_queue_create();
-		if (!dev.processing_queue)
-		{
+		if (!dev.processing_queue) {
 			printf("Failed to create processing queue\n");
 			return -4;
 		}
@@ -1686,46 +1541,39 @@ int main(int argc, char **argv)
 	vcos_log_register("RaspiRaw", VCOS_LOG_CATEGORY);
 
 	status = mmal_component_create("vc.ril.rawcam", &rawcam);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to create rawcam");
 		return -1;
 	}
 	status = mmal_port_parameter_set_boolean(rawcam->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set zero copy");
 		goto component_disable;
 	}
 
 	status = mmal_component_create("vc.ril.isp", &isp);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to create isp");
 		goto component_destroy;
 	}
 	status = mmal_port_parameter_set_boolean(isp->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set zero copy");
 		goto component_disable;
 	}
 	status = mmal_port_parameter_set_boolean(isp->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set zero copy");
 		goto component_disable;
 	}
 
 	status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &render);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to create render");
 		goto component_destroy;
 	}
 	status = mmal_port_parameter_set_boolean(render->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set zero copy");
 		goto component_disable;
 	}
@@ -1735,20 +1583,15 @@ int main(int argc, char **argv)
 	rx_cfg.hdr.id = MMAL_PARAMETER_CAMERA_RX_CONFIG;
 	rx_cfg.hdr.size = sizeof(rx_cfg);
 	status = mmal_port_parameter_get(output, &rx_cfg.hdr);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to get cfg");
 		goto component_destroy;
 	}
-	if (sensor_mode->encoding || cfg.bit_depth == sensor_mode->native_bit_depth)
-	{
+	if (sensor_mode->encoding || cfg.bit_depth == sensor_mode->native_bit_depth) {
 		rx_cfg.unpack = MMAL_CAMERA_RX_CONFIG_UNPACK_NONE;
 		rx_cfg.pack = MMAL_CAMERA_RX_CONFIG_PACK_NONE;
-	}
-	else
-	{
-		switch (sensor_mode->native_bit_depth)
-		{
+	} else {
+		switch (sensor_mode->native_bit_depth) {
 		case 8:
 			rx_cfg.unpack = MMAL_CAMERA_RX_CONFIG_UNPACK_8;
 			break;
@@ -1769,8 +1612,7 @@ int main(int argc, char **argv)
 			rx_cfg.unpack = MMAL_CAMERA_RX_CONFIG_UNPACK_NONE;
 			break;
 		}
-		switch (cfg.bit_depth)
-		{
+		switch (cfg.bit_depth) {
 		case 8:
 			rx_cfg.pack = MMAL_CAMERA_RX_CONFIG_PACK_8;
 			break;
@@ -1798,8 +1640,7 @@ int main(int argc, char **argv)
 	if (sensor_mode->image_id)
 		rx_cfg.image_id = sensor_mode->image_id;
 	status = mmal_port_parameter_set(output, &rx_cfg.hdr);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set cfg");
 		goto component_destroy;
 	}
@@ -1807,8 +1648,7 @@ int main(int argc, char **argv)
 	rx_timing.hdr.id = MMAL_PARAMETER_CAMERA_RX_TIMING;
 	rx_timing.hdr.size = sizeof(rx_timing);
 	status = mmal_port_parameter_get(output, &rx_timing.hdr);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to get timing");
 		goto component_destroy;
 	}
@@ -1829,38 +1669,32 @@ int main(int argc, char **argv)
 	vcos_log_error("Timing %u/%u, %u/%u/%u, %u/%u", rx_timing.timing1, rx_timing.timing2, rx_timing.timing3,
 		       rx_timing.timing4, rx_timing.timing5, rx_timing.term1, rx_timing.term2);
 	status = mmal_port_parameter_set(output, &rx_timing.hdr);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to set timing");
 		goto component_destroy;
 	}
 
-	if (cfg.camera_num != -1)
-	{
+	if (cfg.camera_num != -1) {
 		vcos_log_error("Set camera_num to %d", cfg.camera_num);
 		status = mmal_port_parameter_set_int32(output, MMAL_PARAMETER_CAMERA_NUM, cfg.camera_num);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to set camera_num");
 			goto component_destroy;
 		}
 	}
 
 	status = mmal_component_enable(rawcam);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable rawcam");
 		goto component_destroy;
 	}
 	status = mmal_component_enable(isp);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable isp");
 		goto component_destroy;
 	}
 	status = mmal_component_enable(render);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable render");
 		goto component_destroy;
 	}
@@ -1872,8 +1706,7 @@ int main(int argc, char **argv)
 	output->format->encoding = encoding;
 
 	status = mmal_port_format_commit(output);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed port_format_commit");
 		goto component_disable;
 	}
@@ -1881,13 +1714,10 @@ int main(int argc, char **argv)
 	output->buffer_size = output->buffer_size_recommended;
 	output->buffer_num = output->buffer_num_recommended;
 
-	if (cfg.capture)
-	{
-		if (cfg.write_header || cfg.write_header0)
-		{
+	if (cfg.capture) {
+		if (cfg.write_header || cfg.write_header0) {
 			brcm_header = (struct brcm_raw_header *)malloc(BRCM_RAW_HEADER_LENGTH);
-			if (brcm_header)
-			{
+			if (brcm_header) {
 				memset(brcm_header, 0, BRCM_RAW_HEADER_LENGTH);
 				brcm_header->id = BRCM_ID_SIG;
 				brcm_header->version = HEADER_VERSION;
@@ -1896,8 +1726,7 @@ int main(int argc, char **argv)
 				// FIXME: Ought to check that the sensor is
 				// producing Bayer rather than just assuming.
 				brcm_header->mode.format = VC_IMAGE_BAYER;
-				switch (sensor_mode->order)
-				{
+				switch (sensor_mode->order) {
 				case BAYER_ORDER_BGGR:
 					brcm_header->mode.bayer_order = VC_IMAGE_BAYER_BGGR;
 					break;
@@ -1911,8 +1740,7 @@ int main(int argc, char **argv)
 					brcm_header->mode.bayer_order = VC_IMAGE_BAYER_RGGB;
 					break;
 				}
-				switch (cfg.bit_depth)
-				{
+				switch (cfg.bit_depth) {
 				case 8:
 					brcm_header->mode.bayer_format = VC_IMAGE_BAYER_RAW8;
 					break;
@@ -1929,26 +1757,21 @@ int main(int argc, char **argv)
 					brcm_header->mode.bayer_format = VC_IMAGE_BAYER_RAW16;
 					break;
 				}
-				if (cfg.write_header0)
-				{
+				if (cfg.write_header0) {
 					// Save bcrm_header into one file only
 					FILE *file;
 					file = fopen(cfg.write_header0, "wb");
-					if (file)
-					{
+					if (file) {
 						fwrite(brcm_header, BRCM_RAW_HEADER_LENGTH, 1, file);
 						fclose(file);
 					}
 				}
 			}
-		}
-		else if (cfg.write_headerg)
-		{
+		} else if (cfg.write_headerg) {
 			// Save pgm_header into one file only
 			FILE *file;
 			file = fopen(cfg.write_headerg, "wb");
-			if (file)
-			{
+			if (file) {
 				fprintf(file, "P5\n%d %d\n255\n", sensor_mode->width, sensor_mode->height);
 				fclose(file);
 			}
@@ -1958,22 +1781,19 @@ int main(int argc, char **argv)
 	MMAL_PORT_T *port;
 	port = isp->input[0];
 	status = mmal_format_full_copy(port->format, output->format);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to copy port format");
 		goto pool_destroy;
 	}
 	status = mmal_port_format_commit(port);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to commit port format on isp input");
 		goto pool_destroy;
 	}
 
 	port->buffer_num = output->buffer_num;
 
-	if (port->buffer_size != output->buffer_size)
-	{
+	if (port->buffer_size != output->buffer_size) {
 		vcos_log_error("rawcam output and isp input are different "
 			       "sizes - this could end badly");
 		vcos_log_error("rawcam %u, isp %u", port->buffer_size, output->buffer_size);
@@ -1982,8 +1802,7 @@ int main(int argc, char **argv)
 	port = isp->output[0];
 	port->format->es->video.crop.width = sensor_mode->width;
 	port->format->es->video.crop.height = sensor_mode->height;
-	while (port->format->es->video.crop.width > 1920)
-	{
+	while (port->format->es->video.crop.width > 1920) {
 		// Display can only go up to a certain resolution before
 		// underflowing
 		port->format->es->video.crop.width /= 2;
@@ -1994,25 +1813,21 @@ int main(int argc, char **argv)
 	port->format->encoding = MMAL_ENCODING_I420;
 	port->buffer_num = 6; // Go for 6 output buffers to give some slack
 	status = mmal_port_format_commit(port);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to commit port format on isp output");
 		goto pool_destroy;
 	}
 
-	if (sensor_mode->black_level)
-	{
-		status =
-		    mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL, sensor_mode->black_level);
-		if (status != MMAL_SUCCESS)
-		{
+	if (sensor_mode->black_level) {
+		status = mmal_port_parameter_set_uint32(isp->input[0], MMAL_PARAMETER_BLACK_LEVEL,
+							sensor_mode->black_level);
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to set black level - try "
 				       "updating firmware");
 		}
 	}
 
-	if (cfg.awb_gains_r && cfg.awb_gains_b)
-	{
+	if (cfg.awb_gains_r && cfg.awb_gains_b) {
 		MMAL_PARAMETER_AWB_GAINS_T param = { { MMAL_PARAMETER_CUSTOM_AWB_GAINS, sizeof(param) },
 						     { 0, 0 },
 						     { 0, 0 } };
@@ -2021,8 +1836,7 @@ int main(int argc, char **argv)
 		param.b_gain.num = (unsigned int)(cfg.awb_gains_b * 65536);
 		param.r_gain.den = param.b_gain.den = 65536;
 		status = mmal_port_parameter_set(isp->input[0], &param.hdr);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to set white balance");
 		}
 	}
@@ -2035,24 +1849,20 @@ int main(int argc, char **argv)
 	// handles, not letting MMAL core handle the magic.
 	vcos_log_error("Create pool of %d buffers of size %d", output->buffer_num, output->buffer_size);
 	pool = mmal_port_pool_create(output, output->buffer_num, 0);
-	if (!pool)
-	{
+	if (!pool) {
 		vcos_log_error("Failed to create pool");
 		goto component_disable;
 	}
-	for (i = 0; i < output->buffer_num; i++)
-	{
+	for (i = 0; i < output->buffer_num; i++) {
 		MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(pool->queue);
 		if (!buffer)
 			vcos_log_error("Where did my buffer go?");
-		else
-		{
+		else {
 			unsigned int vcsm_handle =
-			    vcsm_malloc_cache(output->buffer_size, VCSM_CACHE_TYPE_HOST, "mmal_vc_port buffer");
+				vcsm_malloc_cache(output->buffer_size, VCSM_CACHE_TYPE_HOST, "mmal_vc_port buffer");
 			unsigned int vc_handle = vcsm_vc_hdl_from_hdl(vcsm_handle);
 			uint8_t *mem = (uint8_t *)vcsm_lock(vcsm_handle);
-			if (!mem || !vc_handle)
-			{
+			if (!mem || !vc_handle) {
 				LOG_ERROR("could not allocate %i bytes of "
 					  "shared memory (handle %x)",
 					  (int)output->buffer_size, vcsm_handle);
@@ -2060,9 +1870,7 @@ int main(int argc, char **argv)
 					vcsm_unlock_hdl(vcsm_handle);
 				if (vcsm_handle)
 					vcsm_free(vcsm_handle);
-			}
-			else
-			{
+			} else {
 				buffer->data = (void *)vc_handle;
 				buffer->alloc_size = output->buffer_size;
 				buffer->user_data = mem;
@@ -2076,8 +1884,7 @@ int main(int argc, char **argv)
 	// ISP input
 	vcos_log_error("Create pool of %d buffers of size %d", isp->input[0]->buffer_num, isp->input[0]->buffer_size);
 	dev.isp_ip_pool = mmal_port_pool_create(isp->input[0], isp->input[0]->buffer_num, 0);
-	if (!dev.isp_ip_pool)
-	{
+	if (!dev.isp_ip_pool) {
 		vcos_log_error("Failed to create isp_ip_pool");
 		goto component_disable;
 	}
@@ -2085,32 +1892,27 @@ int main(int argc, char **argv)
 
 	isp->input[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&dev;
 	status = mmal_port_enable(isp->input[0], isp_ip_cb);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable isp ip port");
 		goto pool_destroy;
 	}
 
 	// Set up YUV/RGB processing outputs
 	yuv_pool = mmal_port_pool_create(isp->output[0], isp->output[0]->buffer_num, 0);
-	if (!yuv_pool)
-	{
+	if (!yuv_pool) {
 		vcos_log_error("Failed to create yuv pool");
 		goto component_disable;
 	}
-	for (i = 0; i < isp->output[0]->buffer_num; i++)
-	{
+	for (i = 0; i < isp->output[0]->buffer_num; i++) {
 		MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(yuv_pool->queue);
 		if (!buffer)
 			vcos_log_error("Where did my buffer go?");
-		else
-		{
-			unsigned int vcsm_handle =
-			    vcsm_malloc_cache(isp->output[0]->buffer_size, VCSM_CACHE_TYPE_HOST, "mmal_vc_port buffer");
+		else {
+			unsigned int vcsm_handle = vcsm_malloc_cache(isp->output[0]->buffer_size, VCSM_CACHE_TYPE_HOST,
+								     "mmal_vc_port buffer");
 			unsigned int vc_handle = vcsm_vc_hdl_from_hdl(vcsm_handle);
 			uint8_t *mem = (uint8_t *)vcsm_lock(vcsm_handle);
-			if (!mem || !vc_handle)
-			{
+			if (!mem || !vc_handle) {
 				LOG_ERROR("could not allocate %i bytes of "
 					  "shared memory (handle %x)",
 					  (int)isp->output[0]->buffer_size, vcsm_handle);
@@ -2118,9 +1920,7 @@ int main(int argc, char **argv)
 					vcsm_unlock_hdl(vcsm_handle);
 				if (vcsm_handle)
 					vcsm_free(vcsm_handle);
-			}
-			else
-			{
+			} else {
 				buffer->data = (void *)vc_handle;
 				buffer->alloc_size = isp->output[0]->buffer_size;
 				buffer->user_data = mem;
@@ -2130,16 +1930,14 @@ int main(int argc, char **argv)
 	}
 	isp->output[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&yuv_cb;
 	status = mmal_port_enable(isp->output[0], yuv_callback);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable isp op port");
 		goto pool_destroy;
 	}
 	yuv_cb.isp_output = isp->output[0];
 	yuv_cb.isp_op_pool = yuv_pool;
 
-	if (!cfg.no_preview)
-	{
+	if (!cfg.no_preview) {
 		MMAL_DISPLAYREGION_T param;
 		param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
 		param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
@@ -2150,13 +1948,10 @@ int main(int argc, char **argv)
 		param.set |= MMAL_DISPLAY_SET_ALPHA;
 		param.alpha = cfg.opacity;
 
-		if (cfg.fullscreen)
-		{
+		if (cfg.fullscreen) {
 			param.set |= MMAL_DISPLAY_SET_FULLSCREEN;
 			param.fullscreen = 1;
-		}
-		else
-		{
+		} else {
 			param.set |= (MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN);
 			param.fullscreen = 0;
 			param.dest_rect = cfg.preview_window;
@@ -2164,20 +1959,17 @@ int main(int argc, char **argv)
 
 		status = mmal_port_parameter_set(render->input[0], &param.hdr);
 
-		if (status != MMAL_SUCCESS && status != MMAL_ENOSYS)
-		{
+		if (status != MMAL_SUCCESS && status != MMAL_ENOSYS) {
 			vcos_log_error("unable to set preview port parameters (%u)", status);
 		}
 
 		status = mmal_format_full_copy(render->input[0]->format, isp->output[0]->format);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to copy port format - isp to render");
 			goto pool_destroy;
 		}
 		status = mmal_port_format_commit(render->input[0]);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to commit port format on render input");
 			goto pool_destroy;
 		}
@@ -2185,8 +1977,7 @@ int main(int argc, char **argv)
 		render->input[0]->buffer_num = isp->output[0]->buffer_num;
 
 		yuv_cb.vr_ip_pool = mmal_port_pool_create(render->input[0], render->input[0]->buffer_num, 0);
-		if (!yuv_cb.vr_ip_pool)
-		{
+		if (!yuv_cb.vr_ip_pool) {
 			vcos_log_error("Failed to create vr_ip_pool");
 			goto component_disable;
 		}
@@ -2195,26 +1986,22 @@ int main(int argc, char **argv)
 		render->input[0]->userdata = (struct MMAL_PORT_USERDATA_T *)&yuv_cb;
 
 		status = mmal_port_enable(render->input[0], vr_ip_cb);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to enable vr ip port");
 			goto pool_destroy;
 		}
 	}
-	if (cfg.processing_yuv)
-	{
+	if (cfg.processing_yuv) {
 		VCOS_STATUS_T vcos_status;
 		printf("Setup processing thread\n");
 		vcos_status = vcos_thread_create(&processing_yuv_thread, "processing-yuv-thread", NULL,
 						 processing_yuv_thread_task, &yuv_cb);
-		if (vcos_status != VCOS_SUCCESS)
-		{
+		if (vcos_status != VCOS_SUCCESS) {
 			printf("Failed to create processing yuv thread\n");
 			return -4;
 		}
 		yuv_cb.processing_yuv_queue = mmal_queue_create();
-		if (!yuv_cb.processing_yuv_queue)
-		{
+		if (!yuv_cb.processing_yuv_queue) {
 			printf("Failed to create processing yuv queue\n");
 			return -4;
 		}
@@ -2222,8 +2009,7 @@ int main(int argc, char **argv)
 
 	output->userdata = (struct MMAL_PORT_USERDATA_T *)&dev;
 	status = mmal_port_enable(output, callback);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to enable port");
 		goto pool_destroy;
 	}
@@ -2238,11 +2024,9 @@ int main(int argc, char **argv)
 	stop_camera_streaming(sensor, i2c_fd);
 
 port_disable:
-	if (cfg.capture)
-	{
+	if (cfg.capture) {
 		status = mmal_port_disable(output);
-		if (status != MMAL_SUCCESS)
-		{
+		if (status != MMAL_SUCCESS) {
 			vcos_log_error("Failed to disable port");
 			return -1;
 		}
@@ -2254,18 +2038,15 @@ component_disable:
 	if (brcm_header)
 		free(brcm_header);
 	status = mmal_component_disable(render);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to disable render");
 	}
 	status = mmal_component_disable(isp);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to disable isp");
 	}
 	status = mmal_component_disable(rawcam);
-	if (status != MMAL_SUCCESS)
-	{
+	if (status != MMAL_SUCCESS) {
 		vcos_log_error("Failed to disable rawcam");
 	}
 component_destroy:
@@ -2276,35 +2057,27 @@ component_destroy:
 	if (render)
 		mmal_component_destroy(render);
 
-	if (cfg.awb)
-	{
+	if (cfg.awb) {
 		dev.awb_thread_quit = 1;
 		vcos_thread_join(&awb_thread, NULL);
 	}
 
-	if (cfg.processing)
-	{
+	if (cfg.processing) {
 		dev.processing_thread_quit = 1;
 		vcos_thread_join(&processing_thread, NULL);
 	}
 
-	if (cfg.write_timestamps)
-	{
+	if (cfg.write_timestamps) {
 		// Save timestamps
 		FILE *file;
 		file = fopen(cfg.write_timestamps, "wb");
-		if (file)
-		{
+		if (file) {
 			int64_t old = 0;
 			PTS_NODE_T aux;
-			for (aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt)
-			{
-				if (aux == cfg.ptsa)
-				{
+			for (aux = cfg.ptsa; aux != cfg.ptso; aux = aux->nxt) {
+				if (aux == cfg.ptsa) {
 					fprintf(file, ",%d,%lld\n", aux->idx, aux->pts);
-				}
-				else
-				{
+				} else {
 					fprintf(file, "%lld,%d,%lld\n", aux->pts - old, aux->idx, aux->pts);
 				}
 				old = aux->pts;
@@ -2312,8 +2085,7 @@ component_destroy:
 			fclose(file);
 		}
 
-		while (cfg.ptsa != cfg.ptso)
-		{
+		while (cfg.ptsa != cfg.ptso) {
 			PTS_NODE_T aux = cfg.ptsa->nxt;
 			free(cfg.ptsa);
 			cfg.ptsa = aux;
@@ -2331,15 +2103,13 @@ void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum ope
 	uint16_t val;
 	while (i < mode->num_regs && mode->regs[i].reg != reg)
 		i++;
-	if (i == mode->num_regs)
-	{
+	if (i == mode->num_regs) {
 		vcos_log_error("Reg: %04X not found!\n", reg);
 		return;
 	}
 	val = mode->regs[i].data;
 
-	switch (op)
-	{
+	switch (op) {
 	case EQUAL:
 		val = val & ~(1 << bit);
 		val = val | (value << bit);
@@ -2360,84 +2130,66 @@ void modRegBit(struct mode_def *mode, uint16_t reg, int bit, int value, enum ope
 void modReg(struct mode_def *mode, uint16_t reg, int startBit, int endBit, int value, enum operation op)
 {
 	int i;
-	for (i = startBit; i <= endBit; i++)
-	{
+	for (i = startBit; i <= endBit; i++) {
 		modRegBit(mode, reg, i, value >> i & 1, op);
 	}
 }
 
 void update_regs(const struct sensor_def *sensor, struct mode_def *mode, int hflip, int vflip, int exposure, int gain)
 {
-	if (sensor->vflip_reg)
-	{
+	if (sensor->vflip_reg) {
 		modRegBit(mode, sensor->vflip_reg, sensor->vflip_reg_bit, vflip, XOR);
 		if (vflip && !sensor->flips_dont_change_bayer_order)
 			mode->order ^= 2;
 	}
 
-	if (sensor->hflip_reg)
-	{
+	if (sensor->hflip_reg) {
 		modRegBit(mode, sensor->hflip_reg, sensor->hflip_reg_bit, hflip, XOR);
 		if (hflip && !sensor->flips_dont_change_bayer_order)
 			mode->order ^= 1;
 	}
 
-	if (sensor->exposure_reg && exposure != -1)
-	{
-		if (exposure < 0 || exposure >= (1 << sensor->exposure_reg_num_bits))
-		{
+	if (sensor->exposure_reg && exposure != -1) {
+		if (exposure < 0 || exposure >= (1 << sensor->exposure_reg_num_bits)) {
 			vcos_log_error("Invalid exposure:%d, exposure range is 0 to %u!\n", exposure,
 				       (1 << sensor->exposure_reg_num_bits) - 1);
-		}
-		else
-		{
+		} else {
 			uint8_t val;
 			int i, j = VCOS_ALIGN_DOWN(sensor->exposure_reg_num_bits - 1, 8);
 			int num_regs = (sensor->exposure_reg_num_bits + 7) >> 3;
-			for (i = 0; i < num_regs; i++, j -= 8)
-			{
+			for (i = 0; i < num_regs; i++, j -= 8) {
 				val = (exposure >> j) & 0xFF;
 				modReg(mode, sensor->exposure_reg + i, 0, 7, val, EQUAL);
 				vcos_log_error("Set exposure %04X to %02X", sensor->exposure_reg + i, val);
 			}
 		}
 	}
-	if (sensor->vts_reg && exposure != -1 && exposure >= mode->min_vts)
-	{
-		if (exposure < 0 || exposure >= (1 << sensor->vts_reg_num_bits))
-		{
+	if (sensor->vts_reg && exposure != -1 && exposure >= mode->min_vts) {
+		if (exposure < 0 || exposure >= (1 << sensor->vts_reg_num_bits)) {
 			vcos_log_error("Invalid exposure:%d, vts range is 0 to %u!\n", exposure,
 				       (1 << sensor->vts_reg_num_bits) - 1);
-		}
-		else
-		{
+		} else {
 			uint8_t val;
 			int i, j = VCOS_ALIGN_DOWN(sensor->vts_reg_num_bits - 1, 8);
 			int num_regs = (sensor->vts_reg_num_bits + 7) >> 3;
 
-			for (i = 0; i < num_regs; i++, j -= 8)
-			{
+			for (i = 0; i < num_regs; i++, j -= 8) {
 				val = (exposure >> j) & 0xFF;
 				modReg(mode, sensor->vts_reg + i, 0, 7, val, EQUAL);
 				vcos_log_error("Set vts %04X to %02X", sensor->vts_reg + i, val);
 			}
 		}
 	}
-	if (sensor->gain_reg && gain != -1)
-	{
-		if (gain < 0 || gain >= (1 << sensor->gain_reg_num_bits))
-		{
+	if (sensor->gain_reg && gain != -1) {
+		if (gain < 0 || gain >= (1 << sensor->gain_reg_num_bits)) {
 			vcos_log_error("Invalid gain:%d, gain range is 0 to %u\n", gain,
 				       (1 << sensor->gain_reg_num_bits) - 1);
-		}
-		else
-		{
+		} else {
 			uint8_t val;
 			int i, j = VCOS_ALIGN_DOWN(sensor->gain_reg_num_bits - 1, 8);
 			int num_regs = (sensor->gain_reg_num_bits + 7) >> 3;
 
-			for (i = 0; i < num_regs; i++, j -= 8)
-			{
+			for (i = 0; i < num_regs; i++, j -= 8) {
 				val = (gain >> j) & 0xFF;
 				modReg(mode, sensor->gain_reg + i, 0, 7, val, EQUAL);
 				vcos_log_error("Set gain %04X to %02X", sensor->gain_reg + i, val);

@@ -29,8 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RASPICLI_H_
 #define RASPICLI_H_
 
-typedef struct
-{
+typedef struct {
 	int id;
 	char *command;
 	char *abbrev;
@@ -39,8 +38,7 @@ typedef struct
 } COMMAND_LIST;
 
 /// Cross reference structure, mode string against mode id
-typedef struct xref_t
-{
+typedef struct xref_t {
 	char *mode;
 	int mmal_mode;
 } XREF_T;

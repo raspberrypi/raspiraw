@@ -70,10 +70,8 @@ int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands
 	if (!commands || !num_parameters || !arg)
 		return -1;
 
-	for (j = 0; j < num_commands; j++)
-	{
-		if (!strcmp(arg, commands[j].command) || !strcmp(arg, commands[j].abbrev))
-		{
+	for (j = 0; j < num_commands; j++) {
+		if (!strcmp(arg, commands[j].command) || !strcmp(arg, commands[j].abbrev)) {
 			// match
 			command_id = commands[j].id;
 			*num_parameters = commands[j].num_parameters;
@@ -101,8 +99,7 @@ void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands)
 	if (!commands)
 		return;
 
-	for (i = 0; i < num_commands; i++)
-	{
+	for (i = 0; i < num_commands; i++) {
 		fprintf(stdout, "-%s, -%s\t: %s\n", commands[i].abbrev, commands[i].command, commands[i].help);
 	}
 }
@@ -118,10 +115,8 @@ int raspicli_map_xref(const char *str, const XREF_T *map, int num_refs)
 {
 	int i;
 
-	for (i = 0; i < num_refs; i++)
-	{
-		if (!strcasecmp(str, map[i].mode))
-		{
+	for (i = 0; i < num_refs; i++) {
+		if (!strcasecmp(str, map[i].mode)) {
 			return map[i].mmal_mode;
 		}
 	}
@@ -139,10 +134,8 @@ const char *raspicli_unmap_xref(const int en, XREF_T *map, int num_refs)
 {
 	int i;
 
-	for (i = 0; i < num_refs; i++)
-	{
-		if (en == map[i].mmal_mode)
-		{
+	for (i = 0; i < num_refs; i++) {
+		if (en == map[i].mmal_mode) {
 			return map[i].mode;
 		}
 	}

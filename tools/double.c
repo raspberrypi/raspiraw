@@ -21,8 +21,7 @@ int main(int argc, char *argv[])
 
 	f = (m == '5') ? 1 : 3;
 
-	for (i = 0; i < h; ++i)
-	{
+	for (i = 0; i < h; ++i) {
 		assert(f * w == fread(line, 1, f * w, src));
 		assert(f * w == fwrite(line, 1, f * w, stdout));
 		assert(f * w == fwrite(line, 1, f * w, stdout));
