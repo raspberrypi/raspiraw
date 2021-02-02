@@ -1,3 +1,4 @@
+# One way to run clang-format is `clang-format-9 -i --style=file *.{h,c} tools/double.c`
 BasedOnStyle: LLVM
 IndentWidth: 8
 UseTab: Always
