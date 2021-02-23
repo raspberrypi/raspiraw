@@ -180,12 +180,6 @@ raspi-gpio set 2 dh
 	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
-	if [ "$kernel" = "4" ]
-	then
-		i2cdetect -y 0
-	else
-		i2cdetect -y 10
-	fi
 	;;
 
 	'11')
@@ -210,12 +204,6 @@ raspi-gpio set 2 dh
 	`dirname $0`/rpi3-gpiovirtbuf s 133 1
 	#LED
 	#raspi-gpio set 32 1
-	if [ "$kernel" = "4" ]
-	then
-		i2cdetect -y 0
-	else
-		i2cdetect -y 10
-	fi
 	;;
 
 	'13')
