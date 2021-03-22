@@ -647,6 +647,7 @@ struct sensor_regs imx219_mode7[] =
 
 // clang-format on
 
+// TODO binning is not defined here. It should be added and taken into account when crop is calculated.
 struct mode_def imx219_modes[] = {
 	{
 	    .regs = imx219_8MPix,
@@ -785,6 +786,102 @@ struct sensor_regs imx219_stop[] = {
 	{ 0x0100, 0x00 }, // disable streaming
 };
 
+static int imx219_set_crop(const struct sensor_def *const sensor, struct mode_def *const sensor_mode,
+			   const struct raspiraw_crop *const cfg)
+{
+// TODO This does not take binning into account.  binning member needs to be the in mode_def first.
+#define WIDTH  (3280)
+#define HEIGHT (2464)
+
+	// All members of cfg default to -1 if the user did not set them.
+	// Check for validity.
+	if ((cfg->height == 0) || (cfg->width == 0))
+	{
+		// 0 is not a valid value for either.
+		return -1;
+	}
+	if ((cfg->height > HEIGHT) || (cfg->width > WIDTH))
+	{
+		// These are the maximum values, can't exceed them.
+		return -1;
+	}
+	if ((cfg->left >= 0) && (cfg->left + cfg->width > WIDTH))
+	{
+		// Falling off the right edge of the sensor.
+		return -1;
+	}
+	if ((cfg->top >= 0) && (cfg->top + cfg->height > WIDTH))
+	{
+		// Falling off the bottom edge of the sensor.
+		return -1;
+	}
+
+	if (cfg->hinc >= 0)
+	{
+		modReg(sensor_mode, 0x0170, 0, 2, cfg->hinc, EQUAL);
+	}
+
+	if (cfg->vinc >= 0)
+	{
+		modReg(sensor_mode, 0x0171, 0, 2, cfg->vinc, EQUAL);
+	}
+
+	if (cfg->width > 0)
+	{
+		sensor_mode->width = cfg->width;
+		modReg(sensor_mode, 0x016C, 0, 3, cfg->width >> 8, EQUAL);
+		modReg(sensor_mode, 0x016D, 0, 7, cfg->width & 0xFF, EQUAL);
+	}
+
+	if (cfg->height > 0)
+	{
+		sensor_mode->height = cfg->height;
+		modReg(sensor_mode, 0x016E, 0, 3, cfg->height >> 8, EQUAL);
+		modReg(sensor_mode, 0x016F, 0, 7, cfg->height & 0xFF, EQUAL);
+	}
+
+	// Set the start and end pixels in both dimensions.  If the user
+	// did not provide left or top offset, then assume that we should
+	// center the image.
+	{
+		int x_start = 0;
+		if (cfg->left >= 0)
+		{
+			x_start = cfg->left;
+		}
+		else
+		{
+			x_start = (WIDTH - sensor_mode->width) / 2;
+		}
+		modReg(sensor_mode, 0x0164, 0, 3, x_start >> 8, EQUAL);
+		modReg(sensor_mode, 0x0165, 0, 7, x_start & 0xFF, EQUAL);
+		const int x_end = x_start + sensor_mode->width - 1;
+		modReg(sensor_mode, 0x0166, 0, 3, x_end >> 8, EQUAL);
+		modReg(sensor_mode, 0x0167, 0, 7, x_end & 0xFF, EQUAL);
+	}
+	{
+		int y_start = 0;
+		if (cfg->top >= 0)
+		{
+			y_start = cfg->top;
+		}
+		else
+		{
+			y_start = (HEIGHT - sensor_mode->height) / 2;
+		}
+		modReg(sensor_mode, 0x0168, 0, 3, y_start >> 8, EQUAL);
+		modReg(sensor_mode, 0x0169, 0, 7, y_start & 0xFF, EQUAL);
+		const int y_end = y_start + sensor_mode->height - 1;
+		modReg(sensor_mode, 0x016A, 0, 3, y_end >> 8, EQUAL);
+		modReg(sensor_mode, 0x016B, 0, 7, y_end & 0xFF, EQUAL);
+	}
+
+	return 0;
+
+#undef WIDTH
+#undef HEIGHT
+}
+
 // ID, exposure, and gain register settings taken from
 // https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-lollipop-wear-release/drivers/media/video/imx219.c
 // Flip settings taken from
@@ -815,6 +912,8 @@ struct sensor_def imx219 = {
 
 	.gain_reg = 0x0157,
 	.gain_reg_num_bits = 8, // Only valid up to 230.
+
+	.set_crop = imx219_set_crop,
 };
 
 #endif
