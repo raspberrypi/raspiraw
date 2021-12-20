@@ -206,6 +206,26 @@ raspi-gpio set 2 dh
 	#raspi-gpio set 32 1
 	;;
 
+	'12')
+	echo "PiZero2W"
+	# Pins 44&45 Alt1=i2c0, alt2=i2c1
+	# i2c0 can be on pins 0 and 1, so make sure they are not set to alt0
+	if [ "$kernel" = "4" ]
+	then
+		# Do NOT alter 28&29 as they are used by the ethernet PHY.
+		raspi-gpio set 0 ip
+		raspi-gpio set 1 ip
+		# i2c on these pins
+		raspi-gpio set 44 ip
+		raspi-gpio set 44 a1
+		raspi-gpio set 45 ip
+		raspi-gpio set 45 a1
+	fi
+	#shutdown
+	raspi-gpio set 40 dh
+	# No LED line.
+	;;
+
 	'13')
 	# Pi400
 	echo "Failed: Pi400 doesn't have a camera connector"
