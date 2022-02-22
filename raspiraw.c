@@ -1622,6 +1622,47 @@ int main(int argc, char **argv)
 		vcos_log_error("Setting exposure to %d from time %dus", cfg.exposure, cfg.exposure_us);
 	}
 
+	if (1)
+	{
+		unsigned nwidth, nheight, border, end;
+
+		// enabled 4x4 binning
+		modReg(sensor_mode, 0x0174, 0, 7, 2, EQUAL);
+		modReg(sensor_mode, 0x0175, 0, 7, 2, EQUAL);
+		
+		// calculate native fov x borders
+		nwidth = cfg.width*4;
+		border = (3280 - nwidth)/2;
+		end = 3280 - border - 1;
+		
+		// set x params
+		modReg(sensor_mode, 0x0164, 0, 7, border>>8, EQUAL);
+		modReg(sensor_mode, 0x0165, 0, 7, border&0xff, EQUAL);
+		modReg(sensor_mode, 0x0166, 0, 7, end>>8, EQUAL);
+		modReg(sensor_mode, 0x0167, 0, 7, end&0xff, EQUAL);
+		
+		// calculate native fov y borders 
+		nheight = cfg.height*4;
+		border = (2464 - nheight)/2;
+		end = 2464  - border - 1;
+		
+		// set y params
+		modReg(sensor_mode, 0x0168, 0, 7, border>>8, EQUAL);
+		modReg(sensor_mode, 0x0169, 0, 7, border&0xff, EQUAL);
+		modReg(sensor_mode, 0x016a, 0, 7, end>>8, EQUAL);
+		modReg(sensor_mode, 0x016b, 0, 7, end&0xff, EQUAL);
+		
+		// This is poorly understood --- adding these lines increases the framerate, by reducing
+		// the line time from 19517 ns to 18904 ns.
+		// Perhaps Sony has good reasons to use the other settings, but I don't notice any problems.
+		// ...but these lines aren't needed to increase the fov, it's just a "bonus" I discovered...
+		modReg(sensor_mode, 0x0160, 0, 7, 0x0d, EQUAL);
+		modReg(sensor_mode, 0x0161, 0, 7, 0xc6, EQUAL);
+		modReg(sensor_mode, 0x0162, 0, 7, 0x0d, EQUAL);
+		modReg(sensor_mode, 0x0163, 0, 7, 0x78, EQUAL);
+	}
+
+
 	update_regs(sensor, sensor_mode, cfg.hflip, cfg.vflip, cfg.exposure, cfg.gain);
 	if (sensor_mode->encoding == 0)
 		encoding = order_and_bit_depth_to_encoding(sensor_mode->order, cfg.bit_depth);
