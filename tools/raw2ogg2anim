@@ -2,33 +2,33 @@
 
 # needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
 
-if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d[d]]"; exit; fi
 
-echo "removing old auxiliary files"
-rm -f out.*.raw out.*.ppm out.*.ppm.[dDT] out.*.ppm.d.png
+#Determining the model of Raspberry Pi we're running on
+if [ "`lscpu | grep 'Model' | grep -o 'A72'`" = "A72" ]; then
+num_processes=40
+echo "Model 4, running 40 parallell processes"
 
-echo "copying /dev/shm/out.????.raw files"
-for((f=$2; f<=$3; ++f))
-do
-  # cp /dev/shm/out.$(printf "%04d" $f).raw .
-  cat hd0.32k /dev/shm/out.$(printf "%04d" $f).raw >out.$(printf "%04d" $f).raw
-  echo -en "$f     \r"
-done
-echo
+elif [ "`lscpu | grep 'Model' | grep -o 'A53'`" = "A53" ]; then
+num_processes=20
+echo "Model 3, running 20 parallell processes"
 
-echo "dcraw each .raw file (to .ppm)"
-for f in out.*.raw
-do
+
+else
+num_processes=10
+echo "couldn't determine model, running 10 parallell processes"
+fi
+
+
+#converts raw frames to png format
+dcraw_conversion() {
   dcraw $f
   echo -en "$f     \r"
-done
-echo
+}
 
-echo ".ppm -> .ppm.d"
-for f in out.*.ppm
-do
+#stretches lines so that videos recorded with line skips look better
+line_doubling() {
   if [ "$5" = "" ]; then
-    ln -s $f $f.d 
+      ln -s $f $f.d
   else
     if [ "$5" = "d" ]; then
       double $f > $f.d
@@ -38,21 +38,63 @@ do
     fi
   fi
   echo -en "$f     \r"
+}
+
+#converts from intermediary format ppm to final image format png
+ppmtopng_conversion() {
+  pnmtopng $f > $f.png
+  echo -en "$f     \r"
+}
+
+
+#Beginning of legacy script
+if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d[d]]"; exit; fi
+
+echo "removing old auxiliary files"
+rm -f out.*.raw out.*.ppm out.*.ppm.[dDT] out.*.ppm.d.png
+
+
+# this appears to be slower when parallellized, so it's a single process for the time being.
+echo "copying /dev/shm/out.????.raw files"
+for((f=$2; f<=$3; ++f))
+do
+cat /dev/shm/hd0.32k /dev/shm/out.$(printf "%04d" $f).raw >out.$(printf "%04d" $f).raw
+  echo -en "$f     \r"
 done
 echo
+
+
+echo "dcraw each .raw file (to .ppm)"
+for f in out.*.raw
+do
+  ((i=i%num_processes)); ((i++==0)) && wait
+  dcraw_conversion &
+done
+wait
+
+echo ".ppm -> .ppm.d"
+for f in out.*.ppm
+do
+  ((i=i%num_processes)); ((i++==0)) && wait
+  line_doubling &
+done
+wait
 
 echo ".ppm.d -> .ppm.d.png"
 for f in out.*.ppm.d
 do
-  pnmtopng $f > $f.png
-  echo -en "$f     \r"
+  ((i=i%num_processes)); ((i++==0)) && wait
+  ppmtopng_conversion &
 done
-echo
+wait
 
 echo "now creating $1.ogg"
 gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=$2 caps="image/png,framerate=\(fraction\)$4/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
 echo "now creating $1.anim.gif"
-gifenc.sh $1.ogg $1.anim.gif
+gifenc.sh $1.ogg $1.gif
+
+echo "removing new auxiliary files"
+rm -f out.*
 
 echo "done"
