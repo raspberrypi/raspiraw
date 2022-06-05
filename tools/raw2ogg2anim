@@ -119,8 +119,8 @@ else
 fi
 
 
-#comment the following two line if you want to keep individual image frames and other files in the current directory
-[if "$6" != "-k" ]; then
+#add the option "-k" if you want to keep individual image frames and other files in the current directory
+[if "$6" != "-k" || "$5" != "-k" ]; then
   echo "removing new auxiliary files"
   rm -f out.*
 fi
