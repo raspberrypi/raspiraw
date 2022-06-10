@@ -2,33 +2,34 @@
 
 # needs: dcraw, double, netpbm tools, gstreamer, gifenc.sh
 
-if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [d[d]]"; exit; fi
 
-echo "removing old auxiliary files"
-rm -f out.*.raw out.*.ppm out.*.ppm.[dDT] out.*.ppm.d.png
+#Determining the model of Raspberry Pi we're running on, to set an appropriate number of parallell processes
+if [ "`lscpu | grep 'Model' | grep -o 'A72'`" = "A72" ]; then
+  num_processes=40
+  echo "Model 4, running 40 parallell processes"
+else 
+  if [ "`lscpu | grep 'Model' | grep -o 'A53'`" = "A53" ]; then
+    num_processes=20
+    echo "Model 3, running 20 parallell processes"
+  else
+    num_processes=10
+    echo "couldn't determine model, running 10 parallell processes"
+  fi
+fi
 
-echo "copying /dev/shm/out.????.raw files"
-for((f=$2; f<=$3; ++f))
-do
-  # cp /dev/shm/out.$(printf "%04d" $f).raw .
-  cat hd0.32k /dev/shm/out.$(printf "%04d" $f).raw >out.$(printf "%04d" $f).raw
-  echo -en "$f     \r"
-done
-echo
 
-echo "dcraw each .raw file (to .ppm)"
-for f in out.*.raw
-do
+#The following three code blocks define functions to be called later
+#1. converts raw frames to png format
+dcraw_conversion() {
   dcraw $f
   echo -en "$f     \r"
-done
-echo
+}
 
-echo ".ppm -> .ppm.d"
-for f in out.*.ppm
-do
+
+#2. stretches lines so that videos recorded with line skips look better
+line_doubling() {
   if [ "$5" = "" ]; then
-    ln -s $f $f.d 
+      ln -s $f $f.d
   else
     if [ "$5" = "d" ]; then
       double $f > $f.d
@@ -38,21 +39,90 @@ do
     fi
   fi
   echo -en "$f     \r"
+}
+
+
+#3. converts from intermediary format ppm to final image format png
+ppmtopng_conversion() {
+  pnmtopng $f > $f.png
+  echo -en "$f     \r"
+}
+
+
+# Taking user inputs
+if [ "$4" = "" ]; then echo "format: `basename $0` vname first last fps [-t] [-k]  [d[d]]"; exit; fi
+
+
+# If the user inputs "-t" as parameter 5, then we append the current date and time to the filename
+if [ "$5" = "-t" ]; then
+  echo "appending date and time to filename"
+  momentOfCapture=`date +%m.%d_T%H:%M:%S`
+fi
+
+
+# if the user adds the command line option -c or --count, ls | grep $1 is run in cwd,
+# and the new filename is incremented by one in relation to the highest numbered similar filename.
+
+#ls | grep $1
+
+
+echo "removing old auxiliary files"
+rm -f out.*.raw out.*.ppm out.*.ppm.[dDT] out.*.ppm.d.png
+
+
+# this command appears to be slower when parallellized, so it's a single process for the time being.
+echo "copying /dev/shm/out.????.raw files"
+for((f=$2; f<=$3; ++f))
+do
+  cat /dev/shm/hd0.32k /dev/shm/out.$(printf "%04d" $f).raw >out.$(printf "%04d" $f).raw
+  echo -en "$f     \r"
 done
-echo
+
+
+echo "dcraw each .raw file (to .ppm)"
+for f in out.*.raw
+do
+  ((i=i%num_processes)); ((i++==0)) && wait
+  dcraw_conversion &
+done
+wait
+
+
+echo ".ppm -> .ppm.d"
+for f in out.*.ppm
+do
+  ((i=i%num_processes)); ((i++==0)) && wait
+  line_doubling &
+done
+wait
+
 
 echo ".ppm.d -> .ppm.d.png"
 for f in out.*.ppm.d
 do
-  pnmtopng $f > $f.png
-  echo -en "$f     \r"
+  ((i=i%num_processes)); ((i++==0)) && wait
+  ppmtopng_conversion &
 done
-echo
+wait
+
 
 echo "now creating $1.ogg"
 gst-launch-1.0 multifilesrc location="out.%04d.ppm.d.png" index=$2 caps="image/png,framerate=\(fraction\)$4/1" ! pngdec ! videorate ! videoconvert ! videorate ! theoraenc ! oggmux ! filesink location="$1.ogg"
 
-echo "now creating $1.anim.gif"
-gifenc.sh $1.ogg $1.anim.gif
+
+if [ "$5" = "-T" ]; then
+  echo "now creating $1-$momentOfCapture.gif"
+  gifenc.sh $1.ogg $1-$momentOfCapture.gif
+else
+  echo "now creating $1.gif"
+  gifenc.sh $1.ogg $1.gif
+fi
+
+
+#comment the following two line if you want to keep individual image frames and other files in the current directory
+[if "$6" != "-k" ]; then
+  echo "removing new auxiliary files"
+  rm -f out.*
+fi
 
 echo "done"
