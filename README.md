@@ -1,3 +1,5 @@
+# This repo is deprecated, and only kept for reference.
+
 Raspiraw: An example app that receives data directly from CSI sensors
 on the Raspberry Pi.
 
