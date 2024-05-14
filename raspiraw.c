@@ -236,8 +236,8 @@ static COMMAND_LIST cmdline_commands[] = {
 	{ CommandHinc,            "-hinc",           "hi",   "Set horizontal odd/even inc reg", -1 },
 	{ CommandVinc,            "-vinc",           "vi",   "Set vertical odd/even inc reg", -1 },
 	{ CommandFps,             "-fps",            "f",    "Set framerate regs", -1 },
-	{ CommandWidth,           "-width",          "w",    "Set current mode width", -1 },
-	{ CommandHeight,          "-height",         "h",    "Set current mode height", -1 },
+	{ CommandWidth,           "-width",          "w",    "Set current mode width.  IMX219 only: Image will be centered horizontally unless -left is set.", -1 },
+	{ CommandHeight,          "-height",         "h",    "Set current mode height.  IMX219 only: Image will be centered vertically unless -top is set.", -1 },
 	{ CommandLeft,            "-left",           "lt",   "Set current mode left", -1 },
 	{ CommandTop,             "-top",            "tp",   "Set current mode top", -1 },
 	{ CommandWriteHeader0,    "-header0",        "hd0",  "Sets filename to write the BRCM header to", 0 },
@@ -575,6 +575,12 @@ static void buffers_to_rawcam(RASPIRAW_CALLBACK_T *dev)
 
 static void callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
+	if ((buffer->user_data == NULL) || (buffer->length == 0))
+	{
+		mmal_buffer_header_release(buffer);
+		return;
+	}
+
 	static int count = 0;
 	RASPIRAW_CALLBACK_T *dev = (RASPIRAW_CALLBACK_T *)port->userdata;
 	RASPIRAW_PARAMS_T *cfg = (RASPIRAW_PARAMS_T *)dev->cfg;
